@@ -27,8 +27,10 @@ public class LogicalEqualsHashCode {
 	 * State of private mutable instance is wrapped to prevent mutation when
 	 * exposed externally.
 	 */
-	private static LogicalEqualsHashCode immutableInstance = new LogicalEqualsHashCode(Collections.unmodifiableMap(instance.identities), 
-																					   Collections.unmodifiableMap(instance.equalsHashCodeFields));
+	private static LogicalEqualsHashCode immutableInstance = 
+			new LogicalEqualsHashCode(
+					Collections.unmodifiableMap(instance.identities),
+					Collections.unmodifiableMap(instance.equalsHashCodeFields));
 	
 	/**
 	 * List of @Identity annotated fields as discovered via reflection, by
