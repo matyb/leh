@@ -40,9 +40,12 @@ public class LogicalEqualsHashCode {
 	private final Map<Class<?>, List<Field>> identities;
 	
 	/**
-	 * List of @Identity annotated fields as discovered via reflection, by
-	 * class. Acts as local cache mitigating performance hit associated with
+	 * List of equality/hashcode eligible fields as discovered via reflection,
+	 * by class*. Acts as local cache mitigating performance hit associated with
 	 * repetitive reflective discovery.
+	 * 
+	 * @see leh.annotations.Identity for definition of equality/hashcode
+	 *      eligibility.
 	 */
 	private final Map<Class<?>, List<Field>> equalsHashCodeFields;
 	
@@ -77,7 +80,7 @@ public class LogicalEqualsHashCode {
 	}
 	
 	/**
-	 * To return true the statements: 
+	 * To return true either of the statements: 
 	 *   instance1 == instance2;
 	 *   instance1.equals(instace2); 
 	 * evaluate to true; or if both instances are of
@@ -92,7 +95,7 @@ public class LogicalEqualsHashCode {
 	 * @return
 	 */
 	public boolean isEqual(Object instance1, Object instance2){
-		return doFieldsMatch(instance1, instance2, equalsHashCodeFields);
+		return areValuesEqual(instance1, instance2, equalsHashCodeFields);
 	}
 	
 	/**
@@ -108,7 +111,7 @@ public class LogicalEqualsHashCode {
 	 * @return
 	 */
 	public boolean isIdentity(Object instance1, Object instance2){
-		return doFieldsMatch(instance1, instance2, identities);
+		return areValuesEqual(instance1, instance2, identities);
 	}
 
 	/**
@@ -120,7 +123,7 @@ public class LogicalEqualsHashCode {
 	 * @param fields
 	 * @return
 	 */
-	private boolean doFieldsMatch(Object instance1, Object instance2, Map<Class<?>, List<Field>> fields) {
+	private boolean areValuesEqual(Object instance1, Object instance2, Map<Class<?>, List<Field>> fields) {
 		if(instance1 == instance2){
 			return true;  
 		}
@@ -168,7 +171,7 @@ public class LogicalEqualsHashCode {
 			boolean foundValue = false;
 			Object value1 = o1.getValue(), value2 = null;
 			for(Entry<?, ?> o2 : ((Map<?,?>)instance2).entrySet()){
-				if(doFieldsMatch(o1.getKey(), o2.getKey(), fields)){
+				if(areValuesEqual(o1.getKey(), o2.getKey(), fields)){
 					foundValue = true;
 					value2 = o2.getValue();
 					break;
@@ -202,7 +205,7 @@ public class LogicalEqualsHashCode {
 		for(Object o1 : (Iterable<?>)instance1){
 			boolean foundEqual = false;
 			for(Object o2 : (Iterable<?>)instance2){
-				if(doFieldsMatch(o1, o2, fields)){
+				if(areValuesEqual(o1, o2, fields)){
 					foundEqual = true;
 					break;
 				}
@@ -237,7 +240,7 @@ public class LogicalEqualsHashCode {
 		}
 		evaluated.add(instance);
 		if(isEntity(instance)){
-			int hashCode = 0;
+			int hashCode = instance == null ? null : instance.getClass().hashCode();
 			for(Field f : getFields(equalsHashCodeFields, instance.getClass())){
 				Object value = getValue(f, instance);
 				if(value instanceof Iterable<?>){
@@ -407,7 +410,7 @@ public class LogicalEqualsHashCode {
 		return fields;
 	}
 	
-	private void readFields(Class<?> instanceClass) {
+	private synchronized void readFields(Class<?> instanceClass) {
 		List<Field> equalsFields = new ArrayList<Field>();
 		List<Field> identityFields = new ArrayList<Field>();
 		Class<?> lClass = instanceClass;
