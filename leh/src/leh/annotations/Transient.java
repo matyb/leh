@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 /**
- * Ignored from equality tests, but not considered part of identity. 
+ * Ignored from equality tests and hashcode calculations, but not considered part of identity. 
  */
 public @interface Transient {
 

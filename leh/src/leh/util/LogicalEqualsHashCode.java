@@ -220,17 +220,31 @@ public class LogicalEqualsHashCode {
 	 * @return
 	 */
 	public int getHashCode(Object instance){
+		return getHashCode(instance, new ArrayList<Object>());
+	}
+	
+	/**
+	 * getHashCode without Recurring indefinitely in the case of circular references.
+	 * @param instance
+	 * @param arrayList memory
+	 * @return
+	 */
+	private int getHashCode(Object instance, List<Object> evaluated) {
+		if(evaluated.contains(instance)){
+			return 0;
+		}
+		evaluated.add(instance);
 		if(isEntity(instance)){
 			int hashCode = 0;
 			for(Field f : getFields(equalsHashCodeFields, instance.getClass())){
 				Object value = getValue(f, instance);
 				if(value instanceof Iterable<?>){
 					for(Object o : (Iterable<?>)value){
-						hashCode += getHashCode(o);
+						hashCode += getHashCode(o, evaluated);
 					}
 				}else if(value instanceof Map){
 					for(Entry<?,?> o : ((Map<?,?>)value).entrySet()){
-						hashCode += getHashCode(o.getKey()) + getHashCode(o.getValue());
+						hashCode += getHashCode(o.getKey(), evaluated) + getHashCode(o.getValue(), evaluated);
 					}
 				} else{
 					hashCode += getHashCode(value);
@@ -240,7 +254,7 @@ public class LogicalEqualsHashCode {
 		}
 		return instance == null ? 0 : instance.hashCode();
 	}
-	
+
 	/**
 	 * Reflectively access fields and accumulate toString values as implemented
 	 * specifically, implied by @Entity annotation, or assumed via inheritance.

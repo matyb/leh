@@ -7,13 +7,11 @@ import java.util.Map;
 
 import leh.annotations.Entity;
 import leh.annotations.Identity;
-import leh.annotations.Transient;
 
 @Entity
 public class Employee extends Person {
 
 	private long salary;
-	@Transient
 	private Employee manager;
 	private Map<Employee, List<Employee>> reportees = new HashMap<Employee, List<Employee>>();
 	
