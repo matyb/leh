@@ -31,13 +31,6 @@ public class LogicalEqualHashCodeTest {
 		assertNotEquals(new Food(), new Food());
 		assertNotEquals(new Food().hashCode(), new Food().hashCode());
 	}
-	
-	@Test
-	public void testEqualAllNull() throws Exception {
-		Person person1 = new Person();
-		Person person2 = new Person();
-		assertEqualsAndHashCodeSymmetry(person1, person2, true);
-	}
 
 	/**
 	 * HashCode and Equals should be symmetric, this test accounts for
@@ -81,6 +74,13 @@ public class LogicalEqualHashCodeTest {
 		assertTrue(
 				"Somehow \""+instance2+"\" was not equal to itself.",
 				leh.isEqual(instance2, instance2));
+	}
+	
+	@Test
+	public void testEqualAllNull() throws Exception {
+		Person person1 = new Person();
+		Person person2 = new Person();
+		assertEqualsAndHashCodeSymmetry(person1, person2, true);
 	}
 	
 	@Test

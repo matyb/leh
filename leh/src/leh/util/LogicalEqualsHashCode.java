@@ -24,6 +24,27 @@ public class LogicalEqualsHashCode {
 	private static LogicalEqualsHashCode instance = new LogicalEqualsHashCode();
 	
 	/**
+	 * ToString adapter for Map.entrySet
+	 */
+	private final ToStringFunction mapToStringFunction = new ToStringFunction() {
+		@Override
+		public String toString(Object o) {
+			Entry<?, ?> entry = (Entry<?, ?>)o;
+			return getToString(entry.getKey()) + "=" + getToString(entry.getValue());
+		}
+	};
+	
+	/**
+	 * ToString adapter for Iterable.iterator
+	 */
+	private final ToStringFunction iterableToStringFunction = new ToStringFunction() {
+		@Override
+		public String toString(Object o) {
+			return getToString(o);
+		}
+	};
+	
+	/**
 	 * State of private mutable instance is wrapped to prevent mutation when
 	 * exposed externally.
 	 */
@@ -236,7 +257,7 @@ public class LogicalEqualsHashCode {
 	 */
 	private int getHashCode(Object instance, List<Object> evaluated) {
 		if(evaluated.contains(instance)){
-			return 0;
+			return 39;
 		}
 		evaluated.add(instance);
 		if(isEntity(instance)){
@@ -342,31 +363,25 @@ public class LogicalEqualsHashCode {
 	}
 
 	private String getToCollectionString(String prepend, Iterable<?> value, String append, String seperator) {
-		Iterator<?> valueIterator = value.iterator();
-		String toString = "";
-		if(valueIterator.hasNext()){
-			toString = prepend;
-			while(valueIterator.hasNext()){
-				toString += getToString(valueIterator.next());
-				if(valueIterator.hasNext()){
-					toString += seperator;
-				}
-			}
-			toString += append;
-		}
-		return toString;
+		return iteratorToString(prepend, value, seperator, append, iterableToStringFunction);
 	}
 	
 	private String getToCollectionString(String prepend, Map<Object, Object> valueMap, String append, String seperator) {
-		Iterator<Entry<Object, Object>> values = valueMap.entrySet().iterator();
+		return iteratorToString(prepend, valueMap.entrySet(), seperator, append, mapToStringFunction);
+	}
+	
+	private String iteratorToString(String prepend, Iterable<?> collection, String seperator, String append, ToStringFunction function){
+		Iterator<?> values = collection.iterator();
 		String toString = "";
 		if(values.hasNext()){
 			toString = prepend;
 			while(values.hasNext()){
-				Entry<Object, Object> entry = values.next();
-				toString += getToString(entry.getKey()) + "=" + getToString(entry.getValue());
-				if(values.hasNext()){
-					toString += seperator;
+				String string = function.toString(values.next());
+				if(string != null){
+					toString += string;
+					if(values.hasNext()){
+						toString += seperator;
+					}
 				}
 			}
 			toString += append;
@@ -442,6 +457,10 @@ public class LogicalEqualsHashCode {
 		}
 		Class<?> instanceClass = instance instanceof Class ? (Class<?>)instance : instance.getClass();
 		return instanceClass.isAnnotationPresent(Entity.class) ? true : isEntity(instanceClass.getSuperclass());
+	}
+
+	private interface ToStringFunction {
+		String toString(Object o);
 	}
 	
 }
