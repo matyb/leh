@@ -24,6 +24,15 @@ public class LogicalEqualsHashCode {
 	private static LogicalEqualsHashCode instance = new LogicalEqualsHashCode();
 	
 	/**
+	 * State of private mutable instance is wrapped to prevent mutation when
+	 * exposed externally.
+	 */
+	private static LogicalEqualsHashCode immutableInstance = 
+			new LogicalEqualsHashCode(
+					Collections.unmodifiableMap(instance.identities),
+					Collections.unmodifiableMap(instance.equalsHashCodeFields));
+	
+	/**
 	 * ToString adapter for Map.entrySet
 	 */
 	private final ToStringFunction mapToStringFunction = new ToStringFunction() {
@@ -35,7 +44,7 @@ public class LogicalEqualsHashCode {
 	};
 	
 	/**
-	 * ToString adapter for Iterable.iterator
+	 * ToString adapter for Object
 	 */
 	private final ToStringFunction iterableToStringFunction = new ToStringFunction() {
 		@Override
@@ -43,15 +52,6 @@ public class LogicalEqualsHashCode {
 			return getToString(o);
 		}
 	};
-	
-	/**
-	 * State of private mutable instance is wrapped to prevent mutation when
-	 * exposed externally.
-	 */
-	private static LogicalEqualsHashCode immutableInstance = 
-			new LogicalEqualsHashCode(
-					Collections.unmodifiableMap(instance.identities),
-					Collections.unmodifiableMap(instance.equalsHashCodeFields));
 	
 	/**
 	 * List of @Identity annotated fields as discovered via reflection, by
@@ -273,7 +273,7 @@ public class LogicalEqualsHashCode {
 						hashCode += getHashCode(o.getKey(), evaluated) + getHashCode(o.getValue(), evaluated);
 					}
 				} else{
-					hashCode += getHashCode(value);
+					hashCode += getHashCode(value, evaluated);
 				}
 			}
 			return hashCode;

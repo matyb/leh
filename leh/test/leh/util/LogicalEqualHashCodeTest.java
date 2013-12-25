@@ -134,8 +134,8 @@ public class LogicalEqualHashCodeTest {
 		Employee employee1 = new Employee();
 		Employee employee2 = new Employee();
 		Employee manager = new Employee();
-		manager.addEmployee(manager, employee1);
-		manager.addEmployee(manager, employee2);
+		manager.addReportee(manager, employee1);
+		manager.addReportee(manager, employee2);
 		assertEqualsAndHashCodeSymmetry(employee1, employee2, true);
 	}
 	
@@ -144,7 +144,7 @@ public class LogicalEqualHashCodeTest {
 		Employee employee1 = new Employee();
 		Employee employee2 = new Employee();
 		Employee manager = new Employee();
-		employee1.addEmployee(manager, employee2);
+		employee1.addReportee(manager, employee2);
 		assertEqualsAndHashCodeSymmetry(employee1, employee2, false);
 	}
 	
@@ -153,7 +153,7 @@ public class LogicalEqualHashCodeTest {
 		Employee employee1 = new Employee();
 		Employee employee2 = new Employee();
 		Employee manager = new Employee();
-		employee1.addEmployee(manager, employee1);
+		employee1.addReportee(manager, employee1);
 		assertEqualsAndHashCodeSymmetry(employee1, employee2, false);
 	}
 	

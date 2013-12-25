@@ -36,7 +36,7 @@ public class Employee extends Person {
 	public Map<Employee, List<Employee>> getReportees() {
 		return reportees;
 	}
-	public void addEmployee(Employee manager, Employee employee){
+	public void addReportee(Employee manager, Employee employee){
 		List<Employee> employees = reportees.get(manager);
 		if(employees == null){
 			employees = new ArrayList<Employee>();
