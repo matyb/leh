@@ -2,8 +2,8 @@ package leh.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +20,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 
-public class LogicalEqualHashCodeTest {
+public class LEHTest {
 
 	@Test
 	public void testClassesUnderTestDoNotImplementHashCodeNorEquals() throws Exception {
@@ -42,13 +42,13 @@ public class LogicalEqualHashCodeTest {
 	 * @param isEqual
 	 */
 	private void assertEqualsAndHashCodeSymmetry(Object instance1, Object instance2, boolean isEqual) {
-		LogicalEqualsHashCode leh = LogicalEqualsHashCode.getInstance();
+		LEH leh = LEH.getInstance();
 		// matches test expectation
 		assertEquals(
-				"Expected " + instance1 + " and " + instance2 + (isEqual ? "" : "NOT") + " to be equal.", 
+				"Expected " + instance1 + " and " + instance2 + (isEqual ? "" : " NOT") + " to be equal.", 
 				isEqual, leh.isEqual(instance2, instance1));
 		assertEquals(
-				"Expected " + instance1 + " and " + instance2 + (isEqual ? "" : "NOT") + " to hash the same.", 
+				"Expected " + instance1 + " and " + instance2 + (isEqual ? "" : " NOT") + " to hash the same.", 
 				isEqual, leh.getHashCode(instance1) == leh.getHashCode(instance2));
 		// symmetry
 		assertEquals(
@@ -145,6 +145,9 @@ public class LogicalEqualHashCodeTest {
 		Employee employee2 = new Employee();
 		Employee manager = new Employee();
 		employee1.addReportee(manager, employee2);
+		if(LEH.getInstance().getHashCode(employee1) == LEH.getInstance().getHashCode(employee2)){
+			System.out.println();
+		}
 		assertEqualsAndHashCodeSymmetry(employee1, employee2, false);
 	}
 	
@@ -210,7 +213,7 @@ public class LogicalEqualHashCodeTest {
 	public void testEmptyEntityToString() throws Exception {
 		Person person = new Person();
 		person.setSsn("123456789");
-		assertEquals("Person=[ids={ssn=123456789}, gender=UNKNOWN, netWorth=0]", LogicalEqualsHashCode.getInstance().getToString(person));
+		assertEquals("Person=[ids={ssn=123456789}, gender=UNKNOWN, netWorth=0]", LEH.getInstance().getToString(person));
 	}
 	
 	@Test
@@ -227,7 +230,19 @@ public class LogicalEqualHashCodeTest {
 		person.setSpouse(spouse);
 		assertEquals("Employee=[ids={ssn=123456789}, salary=0, reportees={}, birthDate="+birthDate+", gender=UNKNOWN, netWorth=0, "
 					+"spouse=Person=[firstName=Brian, favoriteFoods=[Food=[calories=0, sodium=0, type=PIZZA]], gender=UNKNOWN, netWorth=0]]", 
-					LogicalEqualsHashCode.getInstance().getToString(person));
+					LEH.getInstance().getToString(person));
+	}
+	
+	@Test 
+	public void testCircularReferenceToString() throws Exception {
+		Employee employee = new Employee();
+		employee.setFirstName("employee");
+		Employee manager = new Employee();
+		manager.setFirstName("manager");
+		manager.addReportee(manager, employee);
+		assertEquals("Employee=[salary=0, manager=Employee=[salary=0, reportees={this=["+employee.toString()+"]}, firstName=manager, gender=UNKNOWN, netWorth=0], "
+				   + "reportees={}, firstName=employee, gender=UNKNOWN, netWorth=0]", 
+				LEH.getInstance().getToString(employee));
 	}
 
 	// Test for infinite recursion when reused by overriding equals, hashcode, toString
@@ -294,6 +309,100 @@ public class LogicalEqualHashCodeTest {
 		foodInventory2.setCalories(100);
 		assertNotEquals(foodInventory1.toString(), foodInventory2.toString());
 	}
+
+	@Test
+	public void testProxyLehOverridingEquals() throws Exception {
+		LEH leh = LEH.getInstance();
+		assertEquals(leh.wrap(new Person()), leh.wrap(new Person()));
+	}
+	
+	@Test
+	public void testProxyLehOverridingEqualsHonorsOmissionsLikeIdentity() throws Exception {
+		LEH leh = LEH.getInstance();
+		Person person1 = new Person();
+		person1.setSsn("123");
+		Person person2 = new Person();
+		person2.setSsn("321");
+		assertEquals(leh.wrap(person1), leh.wrap(person2));
+	}
+	
+	@Test
+	public void testProxyLehOverridingEqualsComplimentDifferentClass() throws Exception {
+		LEH leh = LEH.getInstance();
+		assertNotEquals(
+				leh.wrap(new Person()), 
+				leh.wrap(new Person(){/*anonymous inner class is a different class*/}));
+	}
+	
+	@Test
+	public void testProxyLehOverridingEqualsComplimentDifferentValues() throws Exception {
+		LEH leh = LEH.getInstance();
+		Person person1 = new Person();
+		person1.setFirstName("Carl");
+		Person person2 = new Person();
+		person2.setFirstName("Winston");
+		assertNotEquals(leh.wrap(person1), leh.wrap(person2));
+	}
+	
+	@Test
+	public void testProxyLehOverridingHashCode() throws Exception {
+		LEH leh = LEH.getInstance();
+		assertEquals(leh.wrap(new Person()).hashCode(), leh.wrap(new Person()).hashCode());
+	}
+	
+	@Test
+	public void testProxyLehOverridingHashCodeComplimentDifferentClass() throws Exception {
+		LEH leh = LEH.getInstance();
+		assertNotEquals(
+				leh.wrap(new Person()).hashCode(), 
+				leh.wrap(new FoodInventory(){/*anonymous inner class is a different class*/}).hashCode());
+	}
+	
+	@Test
+	public void testProxyLehOverridingHashCodeComplimentDifferentValues() throws Exception {
+		LEH leh = LEH.getInstance();
+		Person person1 = new Person();
+		person1.setFirstName("Carl");
+		Person person2 = new Person();
+		person2.setFirstName("Winston");
+		assertNotEquals(leh.wrap(person1).hashCode(), leh.wrap(person2).hashCode());
+	}
+	
+	@Test
+	public void testProxyLehOverridingToString() throws Exception {
+		LEH leh = LEH.getInstance();
+		assertEquals(leh.wrap(new Person()).toString(), leh.wrap(new Person()).toString());
+	}
+	
+	@Test
+	public void testProxyLehOverridingToStringComplimentDifferentClass() throws Exception {
+		LEH leh = LEH.getInstance();
+		assertNotEquals(
+				leh.wrap(new Person()).toString(), 
+				leh.wrap(new FoodInventory(){/*anonymous inner class is a different class*/}).toString());
+	}
+	
+	@Test
+	public void testProxyLehOverridingToStringComplimentDifferentValues() throws Exception {
+		LEH leh = LEH.getInstance();
+		Person person1 = new Person();
+		person1.setFirstName("Carl");
+		Person person2 = new Person();
+		person2.setFirstName("Winston");
+		assertNotEquals(leh.wrap(person1).toString(), leh.wrap(person2).toString());
+	}
+	
+	@Test 
+	public void testProxyLehOverridingToStringCircularReference() throws Exception {
+		Employee employee = new Employee();
+		employee.setFirstName("employee");
+		Employee manager = new Employee();
+		manager.setFirstName("manager");
+		manager.addReportee(manager, employee);
+		assertEquals("Employee=[salary=0, manager=Employee=[salary=0, reportees={this=["+employee.toString()+"]}, firstName=manager, gender=UNKNOWN, netWorth=0], "
+				   + "reportees={}, firstName=employee, gender=UNKNOWN, netWorth=0]", 
+				LEH.getInstance().wrap(employee).toString());
+	}
 	
 	@Test @Ignore("Just for curiosity's sake, and to debug that caching is working")
 	public void test100000Times() throws Exception {
@@ -307,7 +416,7 @@ public class LogicalEqualHashCodeTest {
 		spouse.setFavoriteFoods(Arrays.asList(food));
 		spouse.setFirstName("Brian");
 		person.setSpouse(spouse);
-		LogicalEqualsHashCode leh = LogicalEqualsHashCode.getInstance();
+		LEH leh = LEH.getInstance();
 		int runs = 100000;
 		List<String> accumulator = new ArrayList<String>(runs);
 		for(int i = 0; i < runs; i++){

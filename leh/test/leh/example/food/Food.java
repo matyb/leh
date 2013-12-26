@@ -1,10 +1,9 @@
 package leh.example.food;
 
-import leh.annotations.Entity;
 import leh.annotations.Identity;
+import leh.util.Entity;
 
-@Entity
-public class Food {
+public class Food implements Entity {
 
 	public enum FoodType {PIZZA, TACO};
 	

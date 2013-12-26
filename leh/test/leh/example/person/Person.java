@@ -4,12 +4,11 @@ import java.awt.Color;
 import java.util.Date;
 import java.util.List;
 
-import leh.annotations.Entity;
 import leh.annotations.Identity;
 import leh.example.food.Food;
+import leh.util.Entity;
 
-@Entity
-public class Person {
+public class Person implements Entity {
 
 	enum Gender {MALE, FEMALE, UNKNOWN};
 	

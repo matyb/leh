@@ -5,11 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import leh.annotations.Entity;
 import leh.annotations.Identity;
+import leh.util.Entity;
 
-@Entity
-public class Employee extends Person {
+public class Employee extends Person implements Entity {
 
 	private long salary;
 	private Employee manager;

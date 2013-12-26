@@ -1,10 +1,9 @@
 package leh.example.food;
 
-import leh.annotations.Entity;
-import leh.util.LogicalEqualsHashCode;
+import leh.util.Entity;
+import leh.util.LEH;
 
-@Entity
-public class FoodInventory extends Food {
+public class FoodInventory extends Food implements Entity {
 
 	private long cost;
 	private long price;
@@ -24,17 +23,17 @@ public class FoodInventory extends Food {
 	
 	@Override
 	public boolean equals(Object obj) {
-		return LogicalEqualsHashCode.getInstance().isEqual(this, obj);
+		return LEH.getInstance().isEqual(this, obj);
 	}
 	
 	@Override
 	public int hashCode() {
-		return LogicalEqualsHashCode.getInstance().getHashCode(this);
+		return LEH.getInstance().getHashCode(this);
 	}
 	
 	@Override
 	public String toString(){
-		return LogicalEqualsHashCode.getInstance().getToString(this);
+		return LEH.getInstance().getToString(this);
 	}
 	
 }
