@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -342,6 +343,33 @@ public class LEHTest {
 		Person person2 = new Person();
 		person2.setFirstName("Winston");
 		assertNotEquals(leh.wrap(person1), leh.wrap(person2));
+	}
+	
+	@Test
+	public void testWrapHandlerAssociation() throws Exception {
+		Meh meh = new Meh(){
+			@Override
+			public Object meh(String arg) {
+				fail();
+				return null;
+			}
+			@Override
+			public Object heh() {
+				return "OK Bai";
+			}
+		};
+		Meh wrappedMeh = LEH.getInstance().wrap(meh, Arrays.asList((MethodHandler)new MethodHandler("meh", new Class[]{String.class}){
+			Object invoke(Object instance, Object... args){
+				return Arrays.asList(instance, Arrays.asList(args));
+			}
+		}), Meh.class);
+		assertEquals(meh.heh(), wrappedMeh.heh());
+		assertEquals(Arrays.asList(wrappedMeh, Arrays.asList("Hai Danny")), wrappedMeh.meh("Hai Danny"));
+	}
+	
+	interface Meh {
+		Object meh(String arg);
+		Object heh();
 	}
 	
 	@Test

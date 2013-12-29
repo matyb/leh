@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,7 +19,44 @@ import leh.annotations.Identity;
 import leh.annotations.Transient;
 
 public class LEH {
-
+	
+	/**
+	 * MethodHandler for interception of equals method when invoked on wrapped
+	 * proxy instances.
+	 * 
+	 * @see wrap(Object instance, List<MethodHandler> methodHandlers)
+	 */
+	public final static MethodHandler EQUALS = new MethodHandler("equals", new Class[]{Object.class}) {
+		@Override
+		Object invoke(Object instance, Object... args) {
+			return LEH.getInstance().isEqual(instance, args[0]);
+		}
+	};
+	/**
+	 * MethodHandler for interception of hashCode method when invoked on wrapped
+	 * proxy instances.
+	 * 
+	 * @see wrap(Object instance, List<MethodHandler> methodHandlers)
+	 */
+	public final static MethodHandler HASHCODE = new MethodHandler("hashCode", new Class[0]) {
+		@Override
+		Object invoke(Object instance, Object... args) {
+			return LEH.getInstance().getHashCode(instance);
+		}
+	};
+	/**
+	 * MethodHandler for interception of toString method when invoked on wrapped
+	 * proxy instances.
+	 * 
+	 * @see wrap(Object instance, List<MethodHandler> methodHandlers)
+	 */
+	public final static MethodHandler TOSTRING = new MethodHandler("toString", new Class[0]) {
+		@Override
+		Object invoke(Object instance, Object... args) {
+			return LEH.getInstance().getToString(instance);
+		}
+	};
+	
 	/**
 	 * Private instance, for use internally.
 	 */
@@ -31,7 +69,8 @@ public class LEH {
 	private static LEH immutableInstance = 
 			new LEH(
 					Collections.unmodifiableMap(instance.identities),
-					Collections.unmodifiableMap(instance.equalsHashCodeFields));
+					Collections.unmodifiableMap(instance.equalsHashCodeFields),
+					Collections.unmodifiableList(instance.methodHandlers));
 	
 	/**
 	 * ToString adapter for Map.entrySet
@@ -72,6 +111,11 @@ public class LEH {
 	private final Map<Class<?>, List<Field>> equalsHashCodeFields;
 	
 	/**
+	 * List of method handlers that LEH supports (equals, hashCode, toString).
+	 */
+	private final List<MethodHandler> methodHandlers;
+	
+	/**
 	 * Constructor used internally for mutable reference to singleton instance.
 	 */
 	private LEH(){
@@ -87,10 +131,27 @@ public class LEH {
 	 * @param identities
 	 * @param logicallyEqualFields
 	 */
-	public LEH(Map<Class<?>, List<Field>> identities,
-								 Map<Class<?>, List<Field>> logicallyEqualFields) {
+	private LEH(Map<Class<?>, List<Field>> identities, Map<Class<?>, List<Field>> logicallyEqualFields) {
+		this(identities, logicallyEqualFields, Arrays.asList(EQUALS, HASHCODE, TOSTRING));
+	}
+
+	/**
+	 * Construct a new instance with the passed in identity and
+	 * equality/hashcode fields by class. Used exclusively internally as maps
+	 * passed to this constructor are mutated.
+	 * 
+	 * Supplied methodHandlers are used by default when wrapping proxy
+	 * instances.
+	 * 
+	 * @param identities
+	 * @param logicallyEqualFields
+	 * @param methodHandlers
+	 */
+	private LEH(Map<Class<?>, List<Field>> identities,
+			Map<Class<?>, List<Field>> logicallyEqualFields, List<MethodHandler> methodHandlers) {
 		this.identities = identities;
 		this.equalsHashCodeFields = logicallyEqualFields;
+		this.methodHandlers = methodHandlers;
 	}
 
 	/**
@@ -643,7 +704,19 @@ public class LEH {
 	 * @return
 	 */
 	public Entity wrap(Object instance) {
-		return (Entity)Proxy.newProxyInstance(instance.getClass().getClassLoader(), new Class[]{Entity.class}, new LEHInvocationHandler(instance));
+		return wrap(instance, methodHandlers);
+	}
+	
+	/**
+	 * Returns a proxy wrapping the passed in instance that implements any of
+	 * the supplied equals/hashcode/toString handlers via Entity with LEH.
+	 * 
+	 * @see leh.util.Entity
+	 * @param instance
+	 * @return
+	 */
+	public Entity wrap(Object instance, List<MethodHandler> handlers) {
+		return (Entity)Proxy.newProxyInstance(instance.getClass().getClassLoader(), new Class[]{Entity.class}, new LEHInvocationHandler(instance, handlers));
 	}
 	
 	/**
@@ -655,9 +728,22 @@ public class LEH {
 	 * @return
 	 */
 	public List<Entity> wrap(List<Object> instances) {
+		return wrap(instances, methodHandlers);
+	}
+	
+	/**
+	 * Returns a list of proxies wrapping the passed in instances. Each
+	 * implements any of the supplied equals/hashcode/toString handlers via
+	 * Entity with LEH.
+	 * 
+	 * @see leh.util.Entity
+	 * @param instances
+	 * @return
+	 */
+	public List<Entity> wrap(List<Object> instances, List<MethodHandler> handlers) {
 		List<Entity> entities = new ArrayList<Entity>(instances.size());
 		for(Object instance : instances){
-			entities.add(wrap(instance));
+			entities.add(wrap(instance, handlers));
 		}
 		return entities;
 	}
@@ -673,22 +759,36 @@ public class LEH {
 	 * @param ifaces
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
 	public <T> T wrap(Object instance, Class<?>...ifaces) {
-		boolean foundEntity = false;
-		for(Class<?> iface : ifaces){
-			if(iface == Entity.class){
-				foundEntity = true;
-				break;
-			}
-		}
-		if(!foundEntity){
-			ifaces = Arrays.copyOf(ifaces, ifaces.length + 1);
-			ifaces[ifaces.length - 1] = Entity.class;
-		}
-		return (T)Proxy.newProxyInstance(instance.getClass().getClassLoader(), ifaces, new LEHInvocationHandler(instance));
+		return wrap(instance, methodHandlers, ifaces);
 	}
 	
+	/**
+	 * Returns a proxy wrapping the passed in instance that implements any of
+	 * the supplied equals/hashcode/toString handlers via Entity with LEH as
+	 * well as any supplied interfaces. Instance supplied must implement any
+	 * supplied interfaces.
+	 * 
+	 * @param instance
+	 * @param handlers
+	 * @param ifaces
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T wrap(Object instance, List<MethodHandler> handlers, Class<?>... ifaces) {
+		Set<Class<?>> interfaces = new HashSet<Class<?>>(Arrays.asList(ifaces));
+		interfaces.add(Entity.class);
+		Class<?> clazz = instance.getClass();
+		while(clazz != null){
+			interfaces.addAll(Arrays.asList(clazz.getInterfaces()));
+			clazz = clazz.getSuperclass();
+		}
+		if(ifaces.length != interfaces.size()){
+			ifaces = interfaces.toArray(new Class[interfaces.size()]);
+		}
+		return (T)Proxy.newProxyInstance(instance.getClass().getClassLoader(), ifaces, new LEHInvocationHandler(instance, handlers));
+	}
+
 	/**
 	 * Returns a list of proxies wrapping the passed in instances. Each
 	 * implements equals/hashcode/toString via Entity with LEH as well as any
@@ -700,11 +800,26 @@ public class LEH {
 	 * @param ifaces
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
 	public <T> List<T> wrap(List<Object> instances, Class<?>...ifaces) {
+		return wrap(instances, methodHandlers, ifaces);
+	}
+	
+	/**
+	 * Returns a list of proxies wrapping the passed in instances. Each
+	 * implements any of equals/hashcode/toString per supplied handlers via
+	 * Entity with LEH as well as any supplied interfaces. Instances supplied
+	 * must implement any supplied interfaces to function appropriately.
+	 * 
+	 * @param instances
+	 * @param handlers
+	 * @param ifaces
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> List<T> wrap(List<Object> instances, List<MethodHandler> handlers, Class<?>...ifaces) {
 		List<T> entities = new ArrayList<T>(instances.size());
 		for(Object instance : instances){
-			entities.add((T)wrap(instance, ifaces));
+			entities.add((T)wrap(instance, handlers, ifaces));
 		}
 		return entities;
 	}
