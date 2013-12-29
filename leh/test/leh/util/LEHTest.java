@@ -432,6 +432,18 @@ public class LEHTest {
 				LEH.getInstance().wrap(employee).toString());
 	}
 	
+	@Test
+	public void testToStringOnAnonymousInnerClassWrapped() throws Exception {
+		Object meh = new Entity(){
+			@SuppressWarnings("unused")
+			private String name = "Meh";
+			@SuppressWarnings("unused")
+			private int age = 22;
+		};
+		meh = LEH.getInstance().wrap(meh);
+		assertEquals("Entity$1=[name=Meh, age=22, this$0=" + toString() + "]", meh.toString());
+	}
+	
 	@Test @Ignore("Just for curiosity's sake, and to debug that caching is working")
 	public void test100000Times() throws Exception {
 		Employee person = new Employee();

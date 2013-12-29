@@ -13,6 +13,10 @@ public class LEHInvocationHandler implements InvocationHandler {
 	private Object wrappedInstance;
 	private final Map<String, MethodHandler> handlers;
 	
+	public LEHInvocationHandler(Object wrappedInstance){
+		this(wrappedInstance, new LEHMethodHandlers());
+	}
+	
 	public LEHInvocationHandler(Object wrappedInstance, List<MethodHandler> handlers){
 		this.wrappedInstance = wrappedInstance;
 		Map<String, MethodHandler> handlerByName = new HashMap<String, MethodHandler>();

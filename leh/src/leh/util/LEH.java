@@ -21,43 +21,6 @@ import leh.annotations.Transient;
 public class LEH {
 	
 	/**
-	 * MethodHandler for interception of equals method when invoked on wrapped
-	 * proxy instances.
-	 * 
-	 * @see wrap(Object instance, List<MethodHandler> methodHandlers)
-	 */
-	public final static MethodHandler EQUALS = new MethodHandler("equals", new Class[]{Object.class}) {
-		@Override
-		Object invoke(Object instance, Object... args) {
-			return LEH.getInstance().isEqual(instance, args[0]);
-		}
-	};
-	/**
-	 * MethodHandler for interception of hashCode method when invoked on wrapped
-	 * proxy instances.
-	 * 
-	 * @see wrap(Object instance, List<MethodHandler> methodHandlers)
-	 */
-	public final static MethodHandler HASHCODE = new MethodHandler("hashCode", new Class[0]) {
-		@Override
-		Object invoke(Object instance, Object... args) {
-			return LEH.getInstance().getHashCode(instance);
-		}
-	};
-	/**
-	 * MethodHandler for interception of toString method when invoked on wrapped
-	 * proxy instances.
-	 * 
-	 * @see wrap(Object instance, List<MethodHandler> methodHandlers)
-	 */
-	public final static MethodHandler TOSTRING = new MethodHandler("toString", new Class[0]) {
-		@Override
-		Object invoke(Object instance, Object... args) {
-			return LEH.getInstance().getToString(instance);
-		}
-	};
-	
-	/**
 	 * Private instance, for use internally.
 	 */
 	private static LEH instance = new LEH();
@@ -132,7 +95,7 @@ public class LEH {
 	 * @param logicallyEqualFields
 	 */
 	private LEH(Map<Class<?>, List<Field>> identities, Map<Class<?>, List<Field>> logicallyEqualFields) {
-		this(identities, logicallyEqualFields, Arrays.asList(EQUALS, HASHCODE, TOSTRING));
+		this(identities, logicallyEqualFields, new LEHMethodHandlers());
 	}
 
 	/**
@@ -417,9 +380,16 @@ public class LEH {
 		String toString;
 		if(isEntity(instance)){
 			evaluated.add(instance);
-			toString = instance.getClass().getSimpleName() + "=[";
+			Class<?> tempClass = instance.getClass();
+			while(tempClass.isAnonymousClass()){
+				if(tempClass.getInterfaces() != null && tempClass.getInterfaces().length > 0){
+					tempClass = tempClass.getInterfaces()[0];
+				}else{
+					tempClass = tempClass.getSuperclass();
+				}
+			}
+			toString = tempClass.getSimpleName() + (tempClass == instance.getClass() ? "" : ("$1"))  + "=[";
 			String seperator = ", ";
-			
 			List<Field> fields = getFields(identities, instance.getClass());
 			String idsString = getToString("ids={", instance, seperator, fields, "}", evaluated);
 			toString += idsString;
