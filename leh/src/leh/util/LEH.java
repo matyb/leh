@@ -141,7 +141,27 @@ public class LEH {
 	 * @return
 	 */
 	public boolean isEqual(Object instance1, Object instance2){
-		return areValuesEqual(instance1, instance2, equalsHashCodeFields);
+		return isEqual(instance1, instance2, isEntity(instance1));
+	}
+	
+	/**
+	 * To return true either of the statements: 
+	 *   instance1 == instance2;
+	 *   instance1.equals(instace2); 
+	 * evaluate to true; or if both instances are of
+	 * types that are annotated with @Entity or isEntity is true, than fields may be 
+	 * tested by reflection for equality. Values found to be of types annotated with 
+	 * @Entity in reflectively testing for equality enter the same test.
+	 * 
+	 * @see leh.util.Entity
+	 * @see leh.annotations.Identity
+	 * @param instance1
+	 * @param instance2
+	 * @param isEntity
+	 * @return
+	 */
+	public boolean isEqual(Object instance1, Object instance2, boolean isEntity){
+		return areValuesEqual(instance1, instance2, equalsHashCodeFields, isEntity);
 	}
 	
 	/**
@@ -170,6 +190,11 @@ public class LEH {
 	 * @return
 	 */
 	private boolean areValuesEqual(Object instance1, Object instance2, Map<Class<?>, List<Field>> fields) {
+		return areValuesEqual(instance1, instance2, fields, isEntity(instance1));
+	}
+
+	private boolean areValuesEqual(Object instance1, Object instance2,
+			Map<Class<?>, List<Field>> fields, boolean isEntity) {
 		if(instance1 == instance2){
 			return true;  
 		}
@@ -182,9 +207,9 @@ public class LEH {
 		if(instance1 instanceof Map && instance2 instanceof Map){ 
 			return getMapEquals(instance1, instance2, fields);
 		}
-		if(isEntity(instance1)){
+		if(isEntity){
 			if(resolveClass(instance1) == resolveClass(instance2)){
-				for(Field f : getFields(fields, resolveClass(instance1))){
+				for(Field f : getFields(fields, resolveClass(instance1), isEntity)){
 					if(!isEqual(getValue(f, instance1), getValue(f, instance2))){
 						return false;
 					}
@@ -302,11 +327,36 @@ public class LEH {
 	 * Reflectively access fields and accumulate hashcode values as implemented
 	 * specifically, implied by @Entity annotation, or assumed via inheritance.
 	 * 
-	 * @param o
+	 * @param instance
 	 * @return
 	 */
 	public int getHashCode(Object instance){
-		return getHashCode(instance, new ArrayList<Object>());
+		return getHashCode(instance, isEntity(instance));
+	}
+	
+	/**
+	 * Reflectively access fields and accumulate hashcode values as implemented
+	 * specifically, implied by @Entity annotation, or assumed via inheritance.
+	 * 
+	 * @param instance
+	 * @param evaluated
+	 * @return
+	 */
+	private int getHashCode(Object instance, List<Object> evaluated){
+		return getHashCode(instance, evaluated, isEntity(instance));
+	}
+	
+	/**
+	 * Reflectively access fields and accumulate hashcode values as implemented
+	 * specifically, whether to treat instance as an entity is passed explicitly
+	 * via the isEntity argument.
+	 * 
+	 * @param instance
+	 * @param isEntity 
+	 * @return
+	 */
+	public int getHashCode(Object instance, boolean isEntity){
+		return getHashCode(instance, new ArrayList<Object>(), isEntity);
 	}
 	
 	/**
@@ -315,20 +365,20 @@ public class LEH {
 	 * @param arrayList memory
 	 * @return
 	 */
-	private int getHashCode(Object instance, List<Object> evaluated) {
+	private int getHashCode(Object instance, List<Object> evaluated, boolean isEntity) {
 		if(instance != null){
 			if(evaluated.contains(instance)){
 				return 39;
 			}
 			evaluated.add(instance);
-			if(isEntity(instance)){
+			if(isEntity){
 				Class<? extends Object> instanceClass = instance.getClass();
 				if(Proxy.isProxyClass(instanceClass)){
 					instance = ((LEHInvocationHandler)Proxy.getInvocationHandler(instance)).getWrappedInstance();
 					instanceClass = instance.getClass();
 				}
 				int hashCode = instanceClass.hashCode();
-				Map<String, Object> valuesByFieldName = getValueByFieldName(instance, getFields(equalsHashCodeFields, instance.getClass()));
+				Map<String, Object> valuesByFieldName = getValueByFieldName(instance, getFields(equalsHashCodeFields, instance.getClass(), isEntity));
 				for(Entry<String, Object> fieldNameAndValue : valuesByFieldName.entrySet()){
 					Object value = fieldNameAndValue.getValue();
 					int tempHashCode = 0;
@@ -361,7 +411,21 @@ public class LEH {
 	 * @return
 	 */
 	public String getToString(Object instance){
-		return getToString(instance, new ArrayList<Object>());
+		return getToString(instance, isEntity(instance), new ArrayList<Object>());
+	}
+	
+	/**
+	 * Reflectively access fields and accumulate toString values as implemented
+	 * specifically, implied by @Entity annotation, or assumed via inheritance.
+	 * 
+	 * Assumption of entity type may be passed explicitly if an object is to be
+	 * treated as an entity.
+	 * 
+	 * @param o
+	 * @return
+	 */
+	public String getToString(Object instance, boolean isEntity){
+		return getToString(instance, isEntity, new ArrayList<Object>());
 	}
 
 	/**
@@ -374,11 +438,24 @@ public class LEH {
 	 * @return
 	 */
 	private String getToString(Object instance, List<Object> evaluated) {
-		if(evaluated.contains(instance)){
-			return "this";
-		}
+		return getToString(instance, isEntity(instance), evaluated);
+	}
+	
+	/**
+	 * Reflectively create logical toString implementation, but memorizes
+	 * evaluated instances to prevent circular references from recurring
+	 * indefinitely.
+	 * 
+	 * @param instance2
+	 * @param arrayList
+	 * @return
+	 */
+	private String getToString(Object instance, boolean isEntity, List<Object> evaluated) {
 		String toString;
-		if(isEntity(instance)){
+		if(isEntity){
+			if(evaluated.contains(instance)){
+				return "this";
+			}
 			evaluated.add(instance);
 			Class<?> tempClass = instance.getClass();
 			while(tempClass.isAnonymousClass()){
@@ -390,10 +467,10 @@ public class LEH {
 			}
 			toString = tempClass.getSimpleName() + (tempClass == instance.getClass() ? "" : ("$1"))  + "=[";
 			String seperator = ", ";
-			List<Field> fields = getFields(identities, instance.getClass());
+			List<Field> fields = getFields(identities, instance.getClass(), isEntity);
 			String idsString = getToString("ids={", instance, seperator, fields, "}", evaluated);
 			toString += idsString;
-			fields = getFields(equalsHashCodeFields, instance.getClass());
+			fields = getFields(equalsHashCodeFields, instance.getClass(), isEntity);
 			if(fields.size() > 0){
 				if(idsString.length() > 0){
 					toString += seperator;
@@ -610,10 +687,25 @@ public class LEH {
 	 * @return
 	 */
 	private List<Field> getFields(Map<Class<?>, List<Field>> map, Class<?> instanceClass) {
+		return getFields(map, instanceClass, isEntity(instanceClass));
+	}
+	
+	/**
+	 * Returns cached list of fields for the class of the instance supplied in
+	 * the map supplied. If no cached fields are discovered in the map, then the
+	 * class is read and the list of appropriate fields is resolved before
+	 * returning the cached fields.
+	 * 
+	 * @param map
+	 * @param instanceClass
+	 * @param isEntity
+	 * @return
+	 */
+	private List<Field> getFields(Map<Class<?>, List<Field>> map, Class<?> instanceClass, boolean isEntity) {
 		List<Field> fields = map.get(instanceClass);
 		if(fields == null){
-			readFields(instanceClass);
-			fields = getFields(map, instanceClass);
+			readFields(instanceClass, isEntity);
+			fields = getFields(map, instanceClass, isEntity);
 		}
 		return fields;
 	}
@@ -623,13 +715,14 @@ public class LEH {
 	 * identity fields and stores in cache within local singleton instances.
 	 * 
 	 * @param instanceClass
+	 * @param isEntity
 	 */
-	private synchronized void readFields(Class<?> instanceClass) {
+	private synchronized void readFields(Class<?> instanceClass, boolean isEntity) {
 		List<Field> equalsFields = new ArrayList<Field>();
 		List<Field> identityFields = new ArrayList<Field>();
 		Class<?> lClass = instanceClass;
 		while(lClass != null){
-			if(isEntity(lClass)){
+			if(isEntity){
 				for(Field f : lClass.getDeclaredFields()){
 					Identity identity = f.getAnnotation(Identity.class);
 					if(!f.isAnnotationPresent(Transient.class) && (identity == null || identity.value())){
@@ -686,7 +779,7 @@ public class LEH {
 	 * @return
 	 */
 	public Entity wrap(Object instance, List<MethodHandler> handlers) {
-		return (Entity)Proxy.newProxyInstance(instance.getClass().getClassLoader(), new Class[]{Entity.class}, new LEHInvocationHandler(instance, handlers));
+		return (Entity)wrap(instance, handlers, Entity.class, new Class[0]);
 	}
 	
 	/**
@@ -729,8 +822,8 @@ public class LEH {
 	 * @param ifaces
 	 * @return
 	 */
-	public <T> T wrap(Object instance, Class<?>...ifaces) {
-		return wrap(instance, methodHandlers, ifaces);
+	public Entity wrap(Object instance, Class<?>...ifaces) {
+		return (Entity)wrap(instance, methodHandlers, Entity.class, ifaces);
 	}
 	
 	/**
@@ -739,15 +832,18 @@ public class LEH {
 	 * well as any supplied interfaces. Instance supplied must implement any
 	 * supplied interfaces.
 	 * 
+	 * Same as Object, List<MethodHandler>, Class<?>... method but casts to the first provided interface class 
+	 * 
 	 * @param instance
 	 * @param handlers
 	 * @param ifaces
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> T wrap(Object instance, List<MethodHandler> handlers, Class<?>... ifaces) {
+	public <T> T wrap(Object instance, List<MethodHandler> handlers, Class<T> referencedInterfaceType, Class<?>... ifaces) {
 		Set<Class<?>> interfaces = new HashSet<Class<?>>(Arrays.asList(ifaces));
 		interfaces.add(Entity.class);
+		interfaces.add(referencedInterfaceType);
 		Class<?> clazz = instance.getClass();
 		while(clazz != null){
 			interfaces.addAll(Arrays.asList(clazz.getInterfaces()));
@@ -770,7 +866,7 @@ public class LEH {
 	 * @param ifaces
 	 * @return
 	 */
-	public <T> List<T> wrap(List<Object> instances, Class<?>...ifaces) {
+	public List<Entity> wrap(List<Object> instances, Class<?>...ifaces) {
 		return wrap(instances, methodHandlers, ifaces);
 	}
 	
@@ -785,14 +881,34 @@ public class LEH {
 	 * @param ifaces
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public <T> List<T> wrap(List<Object> instances, List<MethodHandler> handlers, Class<?>...ifaces) {
-		List<T> entities = new ArrayList<T>(instances.size());
+	public List<Entity> wrap(List<Object> instances, List<MethodHandler> handlers, Class<?>...ifaces) {
+		List<Entity> entities = new ArrayList<Entity>(instances.size());
 		for(Object instance : instances){
-			entities.add((T)wrap(instance, handlers, ifaces));
+			entities.add(wrap(instance, handlers, Entity.class, ifaces));
 		}
 		return entities;
 	}
+	
+	/**
+	 * Returns a list of proxies wrapping the passed in instances. Each
+	 * implements any of equals/hashcode/toString per supplied handlers via
+	 * Entity with LEH as well as any supplied interfaces. Instances supplied
+	 * must implement any supplied interfaces to function appropriately.
+	 * 
+	 * @param instances
+	 * @param handlers
+	 * @param ifaces
+	 * @return
+	 */
+	public <T> List<T> wrap(List<Object> instances, List<MethodHandler> handlers, Class<T> referencedInterfaceType, Class<?>...ifaces) {
+		List<T> entities = new ArrayList<T>(instances.size());
+		for(Object instance : instances){
+			entities.add(wrap(instance, handlers, referencedInterfaceType, ifaces));
+		}
+		return entities;
+	}
+	
+	
 	
 	/**
 	 * Local function object allowing differing string coercion to take place in

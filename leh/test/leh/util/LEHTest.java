@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -434,7 +436,7 @@ public class LEHTest {
 	
 	@Test
 	public void testToStringOnAnonymousInnerClassWrapped() throws Exception {
-		Object meh = new Entity(){
+		Entity meh = new Entity(){
 			@SuppressWarnings("unused")
 			private String name = "Meh";
 			@SuppressWarnings("unused")
@@ -442,6 +444,80 @@ public class LEHTest {
 		};
 		meh = LEH.getInstance().wrap(meh);
 		assertEquals("Entity$1=[name=Meh, age=22, this$0=" + toString() + "]", meh.toString());
+	}
+	
+	@Test
+	public void testEqualsHashCodeAnonymousInnerClassWrapped() throws Exception {
+		Entity meh = new Entity(){
+			@SuppressWarnings("unused")
+			private String name = "Meh";
+			@SuppressWarnings("unused")
+			private int age = 22;
+		};
+		Entity meh2 = createAnonymous(meh);
+		assertNotEquals(meh, meh2);
+		assertNotEquals(meh.hashCode(), meh2.hashCode());
+		LEH leh = LEH.getInstance();
+		meh = leh.wrap(meh);
+		meh2 = leh.wrap(meh2);
+		assertEquals(meh, meh2);
+		assertEquals(meh.hashCode(), meh2.hashCode());
+	}
+	
+	@Test
+	public void testEqualsAnonymousInnerClassWrappedDoesNotExplicitlyInheritFromEntity() throws Exception {
+		Object meh = new Object(){
+			@SuppressWarnings("unused")
+			private String name = "Meh";
+			@SuppressWarnings("unused")
+			private int age = 22;
+		};
+		Object meh2 = createAnonymous(meh);
+		LEH leh = LEH.getInstance();
+		assertNotEquals(meh, meh2);
+		meh = leh.wrap(meh);
+		meh2 = leh.wrap(meh2);
+		assertEquals(meh, meh2);
+	}
+	
+	@Test
+	public void testHashCodeAnonymousInnerClassWrappedDoesNotExplicitlyInheritFromEntity() throws Exception {
+		Object meh = new Object(){
+			@SuppressWarnings("unused")
+			private String name = "Meh";
+			@SuppressWarnings("unused")
+			private int age = 22;
+		};
+		Object meh2 = createAnonymous(meh);
+		LEH leh = LEH.getInstance();
+		assertNotEquals(meh.hashCode(), meh2.hashCode());
+		meh = leh.wrap(meh);
+		meh2 = leh.wrap(meh2);
+		assertEquals(meh.hashCode(), meh2.hashCode());
+	}
+	
+	private <T> T createAnonymous(T instance) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+		@SuppressWarnings("unchecked")
+		Constructor<T> cons = (Constructor<T>) instance.getClass().getDeclaredConstructor(getClass());
+		boolean wasAccessible = cons.isAccessible();
+		try{
+			cons.setAccessible(true);
+			return cons.newInstance(this);
+		}finally{
+			cons.setAccessible(wasAccessible);
+		}
+	}
+
+	@Test
+	public void testToStringOnAnonymousInnerClassWrappedDoesNotExplicitlyInheritFromEntity() throws Exception {
+		Object meh = new Object(){
+			@SuppressWarnings("unused")
+			private String name = "Meh";
+			@SuppressWarnings("unused")
+			private int age = 22;
+		};
+		meh = LEH.getInstance().wrap(meh);
+		assertEquals("Object$1=[name=Meh, age=22, this$0=" + toString() + "]", meh.toString());
 	}
 	
 	@Test @Ignore("Just for curiosity's sake, and to debug that caching is working")
