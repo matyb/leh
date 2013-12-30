@@ -10,7 +10,7 @@ public abstract class MethodHandler {
 		this.argumentTypes = argumentTypes;
 	}
 	
-	abstract Object invoke(Object instance, Object...args);
+	public abstract Object invoke(Object instance, Object...args);
 	
 	public String getName() {
 		return name;

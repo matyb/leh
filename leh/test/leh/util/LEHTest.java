@@ -3,6 +3,7 @@ package leh.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -21,6 +22,8 @@ import leh.example.person.Person;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.lang.reflect.Field;
 
 
 public class LEHTest {
@@ -361,12 +364,56 @@ public class LEHTest {
 			}
 		};
 		Meh wrappedMeh = LEH.getInstance().wrap(meh, Arrays.asList((MethodHandler)new MethodHandler("meh", new Class[]{String.class}){
-			Object invoke(Object instance, Object... args){
+			public Object invoke(Object instance, Object... args){
 				return Arrays.asList(instance, Arrays.asList(args));
 			}
 		}), Meh.class);
 		assertEquals(meh.heh(), wrappedMeh.heh());
 		assertEquals(Arrays.asList(wrappedMeh, Arrays.asList("Hai Danny")), wrappedMeh.meh("Hai Danny"));
+	}
+	
+	// Too like an integration test?
+	@Test
+	public void testImplementingInterfaceAtRuntimeViaWrapImplicitlyAddsEntity() throws Exception {
+		final Object meh1 = new Object(){
+			@SuppressWarnings("unused")
+			private String name = "Meh";
+			@SuppressWarnings("unused")
+			private int age = 22;
+		};
+		List<MethodHandler> handlers = new LEHMethodHandlers();
+		handlers.add(new MethodHandler("meh", new Class[]{String.class}) {
+			public Object invoke(Object instance, Object... args) {
+				assertEquals(meh1, instance);
+				return "Hai " + args[0];
+			}
+		});
+		handlers.add(new MethodHandler("heh", new Class[0]) {
+			public Object invoke(Object instance, Object... args) {
+				assertEquals(meh1, instance);
+				return "OK Bai";
+			}
+		});
+		Meh actualMeh1 = LEH.getInstance().wrap(meh1, handlers, Meh.class);
+		Object meh2 = createAnonymous(meh1);
+		Meh actualMeh2 = LEH.getInstance().wrap(meh2, handlers, Meh.class);
+		// base object is not the same instance nor does it implement concrete equals/hashcode/tostring 
+		assertNotEquals(meh1, meh2);
+		assertNotEquals(meh1.hashCode(), meh2.hashCode());
+		assertNotEquals(meh1.toString(), meh2.toString());
+		assertNotSame(actualMeh1, actualMeh2);
+		// wrapped instances are however equal in equality, hashcode and tostring
+		assertEquals(actualMeh1, actualMeh2);
+		assertEquals(actualMeh1.hashCode(), actualMeh2.hashCode());
+		assertEquals(actualMeh1.toString(), actualMeh2.toString());
+		// if a value changes...
+		Field nameField = meh2.getClass().getDeclaredField("name");
+		nameField.setAccessible(true);
+		nameField.set(meh1, "Something New");
+		// ... then equality, hashcode, and tostring are no longer the same 
+		assertNotEquals(actualMeh1, actualMeh2);
+		assertNotEquals(actualMeh1.hashCode(), actualMeh2.hashCode());
+		assertNotEquals(actualMeh1.toString(), actualMeh2.toString());
 	}
 	
 	interface Meh {

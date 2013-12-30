@@ -675,20 +675,6 @@ public class LEH {
 		}
 		return null;
 	}
-
-	/**
-	 * Returns cached list of fields for the class of the instance supplied in
-	 * the map supplied. If no cached fields are discovered in the map, then the
-	 * class is read and the list of appropriate fields is resolved before
-	 * returning the cached fields.
-	 * 
-	 * @param map
-	 * @param instanceClass
-	 * @return
-	 */
-	private List<Field> getFields(Map<Class<?>, List<Field>> map, Class<?> instanceClass) {
-		return getFields(map, instanceClass, isEntity(instanceClass));
-	}
 	
 	/**
 	 * Returns cached list of fields for the class of the instance supplied in
@@ -815,7 +801,9 @@ public class LEH {
 	 * Returns a proxy wrapping the passed in instance that implements
 	 * equals/hashcode/toString via Entity with LEH as well as any
 	 * supplied interfaces. Instance supplied must implement any
-	 * supplied interfaces.
+	 * supplied interfaces if they are cast to that type or do not
+	 * have a concrete implementation of any specified methods nor
+	 * a handler associated for the call.
 	 * 
 	 * @see leh.util.Entity
 	 * @param instance
@@ -830,7 +818,9 @@ public class LEH {
 	 * Returns a proxy wrapping the passed in instance that implements any of
 	 * the supplied equals/hashcode/toString handlers via Entity with LEH as
 	 * well as any supplied interfaces. Instance supplied must implement any
-	 * supplied interfaces.
+	 * supplied interfaces if they are cast to that type or do not
+	 * have a concrete implementation of any specified methods nor
+	 * a handler associated for the call.
 	 * 
 	 * Same as Object, List<MethodHandler>, Class<?>... method but casts to the first provided interface class 
 	 * 
@@ -858,8 +848,10 @@ public class LEH {
 	/**
 	 * Returns a list of proxies wrapping the passed in instances. Each
 	 * implements equals/hashcode/toString via Entity with LEH as well as any
-	 * supplied interfaces. Instances supplied must implement any supplied
-	 * interfaces to function appropriately.
+	 * supplied interfaces. Instance supplied must implement any
+	 * supplied interfaces if they are cast to that type or do not
+	 * have a concrete implementation of any specified methods nor
+	 * a handler associated for the call.
 	 * 
 	 * @see leh.util.Entity
 	 * @param instance
@@ -873,8 +865,10 @@ public class LEH {
 	/**
 	 * Returns a list of proxies wrapping the passed in instances. Each
 	 * implements any of equals/hashcode/toString per supplied handlers via
-	 * Entity with LEH as well as any supplied interfaces. Instances supplied
-	 * must implement any supplied interfaces to function appropriately.
+	 * Entity with LEH as well as any supplied interfaces. Instances 
+	 * supplied must implement any supplied interfaces if they are cast to 
+	 * that type or do not have a concrete implementation of any specified 
+	 * methods nor a handler associated for the call.
 	 * 
 	 * @param instances
 	 * @param handlers
@@ -892,8 +886,10 @@ public class LEH {
 	/**
 	 * Returns a list of proxies wrapping the passed in instances. Each
 	 * implements any of equals/hashcode/toString per supplied handlers via
-	 * Entity with LEH as well as any supplied interfaces. Instances supplied
-	 * must implement any supplied interfaces to function appropriately.
+	 * Entity with LEH as well as any supplied interfaces. Instances 
+	 * supplied must implement any supplied interfaces if they are cast to 
+	 * that type or do not have a concrete implementation of any 
+	 * specified methods nor a handler associated for the call.
 	 * 
 	 * @param instances
 	 * @param handlers

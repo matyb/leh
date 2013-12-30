@@ -14,7 +14,7 @@ public class LEHMethodHandlers extends ArrayList<MethodHandler>{
 	 */
 	public final static MethodHandler EQUALS = new MethodHandler("equals", new Class[]{Object.class}) {
 		@Override
-		Object invoke(Object instance, Object... args) {
+		public Object invoke(Object instance, Object... args) {
 			return LEH.getInstance().isEqual(instance, args[0], true);
 		}
 	};
@@ -26,7 +26,7 @@ public class LEHMethodHandlers extends ArrayList<MethodHandler>{
 	 */
 	public final static MethodHandler HASHCODE = new MethodHandler("hashCode", new Class[0]) {
 		@Override
-		Object invoke(Object instance, Object... args) {
+		public Object invoke(Object instance, Object... args) {
 			return LEH.getInstance().getHashCode(instance, true);
 		}
 	};
@@ -38,7 +38,7 @@ public class LEHMethodHandlers extends ArrayList<MethodHandler>{
 	 */
 	public final static MethodHandler TOSTRING = new MethodHandler("toString", new Class[0]) {
 		@Override
-		Object invoke(Object instance, Object... args) {
+		public Object invoke(Object instance, Object... args) {
 			return LEH.getInstance().getToString(instance, true);
 		}
 	};
