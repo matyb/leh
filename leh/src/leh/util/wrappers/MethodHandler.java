@@ -1,4 +1,4 @@
-package leh.util;
+package leh.util.wrappers;
 
 public abstract class MethodHandler {
 

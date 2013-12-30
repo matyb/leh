@@ -1,14 +1,7 @@
 package leh.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -19,11 +12,10 @@ import leh.example.food.Food.FoodType;
 import leh.example.food.FoodInventory;
 import leh.example.person.Employee;
 import leh.example.person.Person;
+import leh.util.wrappers.LEHWrapper;
 
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.lang.reflect.Field;
 
 
 public class LEHTest {
@@ -315,256 +307,19 @@ public class LEHTest {
 		foodInventory2.setCalories(100);
 		assertNotEquals(foodInventory1.toString(), foodInventory2.toString());
 	}
-
-	@Test
-	public void testProxyLehOverridingEquals() throws Exception {
-		LEH leh = LEH.getInstance();
-		assertEquals(leh.wrap(new Person()), leh.wrap(new Person()));
-	}
 	
 	@Test
-	public void testProxyLehOverridingEqualsHonorsOmissionsLikeIdentity() throws Exception {
-		LEH leh = LEH.getInstance();
-		Person person1 = new Person();
-		person1.setSsn("123");
-		Person person2 = new Person();
-		person2.setSsn("321");
-		assertEquals(leh.wrap(person1), leh.wrap(person2));
+	public void testEqualsAndHashCodeFromLEHOnWrappedProxyInstance() throws Exception {
+		LEHWrapper wrapper = LEHWrapper.getInstance();
+		assertEqualsAndHashCodeSymmetry(wrapper.wrap(new Person()), 
+										wrapper.wrap(new Person()), 
+										true);
 	}
 	
 	@Test
-	public void testProxyLehOverridingEqualsComplimentDifferentClass() throws Exception {
-		LEH leh = LEH.getInstance();
-		assertNotEquals(
-				leh.wrap(new Person()), 
-				leh.wrap(new Person(){/*anonymous inner class is a different class*/}));
-	}
-	
-	@Test
-	public void testProxyLehOverridingEqualsComplimentDifferentValues() throws Exception {
-		LEH leh = LEH.getInstance();
-		Person person1 = new Person();
-		person1.setFirstName("Carl");
-		Person person2 = new Person();
-		person2.setFirstName("Winston");
-		assertNotEquals(leh.wrap(person1), leh.wrap(person2));
-	}
-	
-	@Test
-	public void testWrapHandlerAssociation() throws Exception {
-		Meh meh = new Meh(){
-			@Override
-			public Object meh(String arg) {
-				fail();
-				return null;
-			}
-			@Override
-			public Object heh() {
-				return "OK Bai";
-			}
-		};
-		Meh wrappedMeh = LEH.getInstance().wrap(meh, Arrays.asList((MethodHandler)new MethodHandler("meh", new Class[]{String.class}){
-			public Object invoke(Object instance, Object... args){
-				return Arrays.asList(instance, Arrays.asList(args));
-			}
-		}), Meh.class);
-		assertEquals(meh.heh(), wrappedMeh.heh());
-		assertEquals(Arrays.asList(wrappedMeh, Arrays.asList("Hai Danny")), wrappedMeh.meh("Hai Danny"));
-	}
-	
-	// Too like an integration test?
-	@Test
-	public void testImplementingInterfaceAtRuntimeViaWrapImplicitlyAddsEntity() throws Exception {
-		final Object meh1 = new Object(){
-			@SuppressWarnings("unused")
-			private String name = "Meh";
-			@SuppressWarnings("unused")
-			private int age = 22;
-		};
-		List<MethodHandler> handlers = new LEHMethodHandlers();
-		handlers.add(new MethodHandler("meh", new Class[]{String.class}) {
-			public Object invoke(Object instance, Object... args) {
-				assertEquals(meh1, instance);
-				return "Hai " + args[0];
-			}
-		});
-		handlers.add(new MethodHandler("heh", new Class[0]) {
-			public Object invoke(Object instance, Object... args) {
-				assertEquals(meh1, instance);
-				return "OK Bai";
-			}
-		});
-		Meh actualMeh1 = LEH.getInstance().wrap(meh1, handlers, Meh.class);
-		Object meh2 = createAnonymous(meh1);
-		Meh actualMeh2 = LEH.getInstance().wrap(meh2, handlers, Meh.class);
-		// base object is not the same instance nor does it implement concrete equals/hashcode/tostring 
-		assertNotEquals(meh1, meh2);
-		assertNotEquals(meh1.hashCode(), meh2.hashCode());
-		assertNotEquals(meh1.toString(), meh2.toString());
-		assertNotSame(actualMeh1, actualMeh2);
-		// wrapped instances are however equal in equality, hashcode and tostring
-		assertEquals(actualMeh1, actualMeh2);
-		assertEquals(actualMeh1.hashCode(), actualMeh2.hashCode());
-		assertEquals(actualMeh1.toString(), actualMeh2.toString());
-		// if a value changes...
-		Field nameField = meh2.getClass().getDeclaredField("name");
-		nameField.setAccessible(true);
-		nameField.set(meh1, "Something New");
-		// ... then equality, hashcode, and tostring are no longer the same 
-		assertNotEquals(actualMeh1, actualMeh2);
-		assertNotEquals(actualMeh1.hashCode(), actualMeh2.hashCode());
-		assertNotEquals(actualMeh1.toString(), actualMeh2.toString());
-	}
-	
-	interface Meh {
-		Object meh(String arg);
-		Object heh();
-	}
-	
-	@Test
-	public void testProxyLehOverridingHashCode() throws Exception {
-		LEH leh = LEH.getInstance();
-		assertEquals(leh.wrap(new Person()).hashCode(), leh.wrap(new Person()).hashCode());
-	}
-	
-	@Test
-	public void testProxyLehOverridingHashCodeComplimentDifferentClass() throws Exception {
-		LEH leh = LEH.getInstance();
-		assertNotEquals(
-				leh.wrap(new Person()).hashCode(), 
-				leh.wrap(new FoodInventory(){/*anonymous inner class is a different class*/}).hashCode());
-	}
-	
-	@Test
-	public void testProxyLehOverridingHashCodeComplimentDifferentValues() throws Exception {
-		LEH leh = LEH.getInstance();
-		Person person1 = new Person();
-		person1.setFirstName("Carl");
-		Person person2 = new Person();
-		person2.setFirstName("Winston");
-		assertNotEquals(leh.wrap(person1).hashCode(), leh.wrap(person2).hashCode());
-	}
-	
-	@Test
-	public void testProxyLehOverridingToString() throws Exception {
-		LEH leh = LEH.getInstance();
-		assertEquals(leh.wrap(new Person()).toString(), leh.wrap(new Person()).toString());
-	}
-	
-	@Test
-	public void testProxyLehOverridingToStringComplimentDifferentClass() throws Exception {
-		LEH leh = LEH.getInstance();
-		assertNotEquals(
-				leh.wrap(new Person()).toString(), 
-				leh.wrap(new FoodInventory(){/*anonymous inner class is a different class*/}).toString());
-	}
-	
-	@Test
-	public void testProxyLehOverridingToStringComplimentDifferentValues() throws Exception {
-		LEH leh = LEH.getInstance();
-		Person person1 = new Person();
-		person1.setFirstName("Carl");
-		Person person2 = new Person();
-		person2.setFirstName("Winston");
-		assertNotEquals(leh.wrap(person1).toString(), leh.wrap(person2).toString());
-	}
-	
-	@Test 
-	public void testProxyLehOverridingToStringCircularReference() throws Exception {
-		Employee employee = new Employee();
-		employee.setFirstName("employee");
-		Employee manager = new Employee();
-		manager.setFirstName("manager");
-		manager.addReportee(manager, employee);
-		assertEquals("Employee=[salary=0, manager=Employee=[salary=0, reportees={this=["+employee.toString()+"]}, firstName=manager, gender=UNKNOWN, netWorth=0], "
-				   + "reportees={}, firstName=employee, gender=UNKNOWN, netWorth=0]", 
-				LEH.getInstance().wrap(employee).toString());
-	}
-	
-	@Test
-	public void testToStringOnAnonymousInnerClassWrapped() throws Exception {
-		Entity meh = new Entity(){
-			@SuppressWarnings("unused")
-			private String name = "Meh";
-			@SuppressWarnings("unused")
-			private int age = 22;
-		};
-		meh = LEH.getInstance().wrap(meh);
-		assertEquals("Entity$1=[name=Meh, age=22, this$0=" + toString() + "]", meh.toString());
-	}
-	
-	@Test
-	public void testEqualsHashCodeAnonymousInnerClassWrapped() throws Exception {
-		Entity meh = new Entity(){
-			@SuppressWarnings("unused")
-			private String name = "Meh";
-			@SuppressWarnings("unused")
-			private int age = 22;
-		};
-		Entity meh2 = createAnonymous(meh);
-		assertNotEquals(meh, meh2);
-		assertNotEquals(meh.hashCode(), meh2.hashCode());
-		LEH leh = LEH.getInstance();
-		meh = leh.wrap(meh);
-		meh2 = leh.wrap(meh2);
-		assertEquals(meh, meh2);
-		assertEquals(meh.hashCode(), meh2.hashCode());
-	}
-	
-	@Test
-	public void testEqualsAnonymousInnerClassWrappedDoesNotExplicitlyInheritFromEntity() throws Exception {
-		Object meh = new Object(){
-			@SuppressWarnings("unused")
-			private String name = "Meh";
-			@SuppressWarnings("unused")
-			private int age = 22;
-		};
-		Object meh2 = createAnonymous(meh);
-		LEH leh = LEH.getInstance();
-		assertNotEquals(meh, meh2);
-		meh = leh.wrap(meh);
-		meh2 = leh.wrap(meh2);
-		assertEquals(meh, meh2);
-	}
-	
-	@Test
-	public void testHashCodeAnonymousInnerClassWrappedDoesNotExplicitlyInheritFromEntity() throws Exception {
-		Object meh = new Object(){
-			@SuppressWarnings("unused")
-			private String name = "Meh";
-			@SuppressWarnings("unused")
-			private int age = 22;
-		};
-		Object meh2 = createAnonymous(meh);
-		LEH leh = LEH.getInstance();
-		assertNotEquals(meh.hashCode(), meh2.hashCode());
-		meh = leh.wrap(meh);
-		meh2 = leh.wrap(meh2);
-		assertEquals(meh.hashCode(), meh2.hashCode());
-	}
-	
-	private <T> T createAnonymous(T instance) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-		@SuppressWarnings("unchecked")
-		Constructor<T> cons = (Constructor<T>) instance.getClass().getDeclaredConstructor(getClass());
-		boolean wasAccessible = cons.isAccessible();
-		try{
-			cons.setAccessible(true);
-			return cons.newInstance(this);
-		}finally{
-			cons.setAccessible(wasAccessible);
-		}
-	}
-
-	@Test
-	public void testToStringOnAnonymousInnerClassWrappedDoesNotExplicitlyInheritFromEntity() throws Exception {
-		Object meh = new Object(){
-			@SuppressWarnings("unused")
-			private String name = "Meh";
-			@SuppressWarnings("unused")
-			private int age = 22;
-		};
-		meh = LEH.getInstance().wrap(meh);
-		assertEquals("Object$1=[name=Meh, age=22, this$0=" + toString() + "]", meh.toString());
+	public void testToStringFromLEHOnWrappedProxyInstance() throws Exception {
+		LEHWrapper wrapper = LEHWrapper.getInstance();
+		assertEquals("Person=[gender=UNKNOWN, netWorth=0]", LEH.getInstance().getToString(wrapper.wrap(new Person())));
 	}
 	
 	@Test @Ignore("Just for curiosity's sake, and to debug that caching is working")

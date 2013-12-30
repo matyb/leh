@@ -1,7 +1,14 @@
-package leh.util;
+package leh.util.wrappers;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import leh.util.LEH;
+
+/**
+ * The constants for MethodHandler implementations LEH supports.
+ */
 public class LEHMethodHandlers extends ArrayList<MethodHandler>{
 
 	private static final long serialVersionUID = 787650288465749449L;
@@ -44,14 +51,23 @@ public class LEHMethodHandlers extends ArrayList<MethodHandler>{
 	};
 	
 	/**
-	 * List of default LEH MethodHandler instances (equals, hashCode, toString). Can
-	 * be modified to augment LEH method handling for wrapping instances with extra
-	 * functionality external to LEH.
+	 * All supported LEH methods, currently: equals, hashCode, toString.
 	 */
-	public LEHMethodHandlers() {
-		add(EQUALS);
-		add(HASHCODE);
-		add(TOSTRING);
-	}
+	public final static List<MethodHandler> ALL_LEH_METHODS = Arrays.asList(EQUALS, HASHCODE, TOSTRING);
+	
+	/**
+	 * Just equality and hashCode LEH MethodHandlers.
+	 */
+	public final static List<MethodHandler> EQUALS_HASHCODE_METHODS = Arrays.asList(EQUALS, HASHCODE);
+	
+	/**
+	 * Just the toString LEH MethodHandler, in a List for convenience.
+	 */
+	public final static List<MethodHandler> TOSTRING_METHODS = Arrays.asList(TOSTRING);
+	
+	/**
+	 * Restricted to prevent instantiation. Reference constants instead.
+	 */
+	private LEHMethodHandlers(){}
 	
 }
