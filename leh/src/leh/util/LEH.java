@@ -17,6 +17,11 @@ import leh.annotations.Identity;
 import leh.annotations.Transient;
 import leh.util.wrappers.LEHInvocationHandler;
 
+/**
+ * A utility class that operates on Entity instances or on the presumption of an
+ * instance implementing Entity to assume how their equals, hashCode, and
+ * toString methods should operate.
+ */
 public class LEH {
 	
 	/**
