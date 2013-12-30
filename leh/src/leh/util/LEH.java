@@ -107,13 +107,13 @@ public class LEH {
 	}
 	
 	/**
-	 * To return true either of the statements: 
-	 *   instance1 == instance2;
-	 *   instance1.equals(instace2); 
-	 * evaluate to true; or if both instances are of
-	 * types that are annotated with @Entity, than fields may be tested by
-	 * reflection for equality. Values found to be of types annotated with @Entity
-	 * in reflectively testing for equality enter the same test.
+	 * To return true either of the statements:<BR> 
+	 *     instance1 == instance2;<BR>
+	 *     instance1.equals(instace2);<BR> 
+	 * evaluate to true; or if both instances are of types that implement Entity, 
+	 * than fields may be tested by reflection for equality. Values found to be 
+	 * of types implementing Entity in reflectively testing for equality enter 
+	 * the same test.
 	 * 
 	 * @see leh.util.Entity
 	 * @see leh.annotations.Identity
@@ -129,10 +129,9 @@ public class LEH {
 	 * To return true either of the statements: 
 	 *   instance1 == instance2;
 	 *   instance1.equals(instace2); 
-	 * evaluate to true; or if both instances are of
-	 * types that are annotated with @Entity or isEntity is true, than fields may be 
-	 * tested by reflection for equality. Values found to be of types annotated with 
-	 * @Entity in reflectively testing for equality enter the same test.
+	 * evaluate to true; or if isEntity is true, than fields may be 
+	 * tested by reflection for equality. Values found to be of types implementing 
+	 * Entity in reflectively testing for equality enter the same test.
 	 * 
 	 * @see leh.util.Entity
 	 * @see leh.annotations.Identity
@@ -146,10 +145,10 @@ public class LEH {
 	}
 	
 	/**
-	 * To return true both instances must be of identical types that are annotated with
-	 * @Entity, and fields annotated with @Identity must have equal values in
-	 * both instances. Values found to be of types annotated with @Entity
-	 * in reflectively testing for identity enter the same test recursively.
+	 * To return true both instances must be of identical types that implement
+	 * Entity, and fields annotated with @Identity must have equal values in
+	 * both instances. Values found to be of types implementing Entity in 
+	 * reflectively testing for identity enter the same test recursively.
 	 * 
 	 * @see leh.util.Entity
 	 * @see leh.annotations.Identity
@@ -306,7 +305,7 @@ public class LEH {
 
 	/**
 	 * Reflectively access fields and accumulate hashcode values as implemented
-	 * specifically, implied by @Entity annotation, or assumed via inheritance.
+	 * specifically, implied by Entity inheritance.
 	 * 
 	 * @param instance
 	 * @return
@@ -317,7 +316,7 @@ public class LEH {
 	
 	/**
 	 * Reflectively access fields and accumulate hashcode values as implemented
-	 * specifically, implied by @Entity annotation, or assumed via inheritance.
+	 * specifically, implied by Entity inheritance.
 	 * 
 	 * @param instance
 	 * @param evaluated
@@ -386,7 +385,7 @@ public class LEH {
 
 	/**
 	 * Reflectively access fields and accumulate toString values as implemented
-	 * specifically, implied by @Entity annotation, or assumed via inheritance.
+	 * specifically, implied by Entity inheritance.
 	 * 
 	 * @param o
 	 * @return
@@ -397,7 +396,8 @@ public class LEH {
 	
 	/**
 	 * Reflectively access fields and accumulate toString values as implemented
-	 * specifically, implied by @Entity annotation, or assumed via inheritance.
+	 * specifically, or implied by the presumption of the instance implementing
+	 * entity as indicated by the isEntity argument..
 	 * 
 	 * Assumption of entity type may be passed explicitly if an object is to be
 	 * treated as an entity.
