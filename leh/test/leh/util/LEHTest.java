@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import leh.example.SelfReferencingExample;
 import leh.example.food.Food;
 import leh.example.food.Food.FoodType;
 import leh.example.food.FoodInventory;
@@ -29,84 +30,43 @@ public class LEHTest {
 		assertNotEquals(new Food(), new Food());
 		assertNotEquals(new Food().hashCode(), new Food().hashCode());
 	}
-
-	/**
-	 * HashCode and Equals should be symmetric, this test accounts for
-	 * maintaining symmetry between those methods conveniently. Also
-	 * enforces java equals contract.
-	 * 
-	 * @param instance1
-	 * @param instance2
-	 * @param isEqual
-	 */
-	private void assertEqualsAndHashCodeSymmetry(Object instance1, Object instance2, boolean isEqual) {
-		LEH leh = LEH.getInstance();
-		// matches test expectation
-		assertEquals(
-				"Expected " + instance1 + " and " + instance2 + (isEqual ? "" : " NOT") + " to be equal.", 
-				isEqual, leh.isEqual(instance2, instance1));
-		assertEquals(
-				"Expected " + instance1 + " and " + instance2 + (isEqual ? "" : " NOT") + " to hash the same.", 
-				isEqual, leh.getHashCode(instance1) == leh.getHashCode(instance2));
-		// symmetry
-		assertEquals(
-				"Order of arguments is significant, equals methods should be symmetric.",
-				leh.isEqual(instance1, instance2), leh.isEqual(instance2, instance1));
-		// null
-		assertFalse(
-				"Somehow \""+instance1+"\" was equal to null.",
-				leh.isEqual(instance1, null));
-		assertFalse(
-				"Somehow \""+instance2+"\" was equal to null.",
-				leh.isEqual(instance2, null));
-		assertFalse(
-				"Somehow \""+instance1+"\" was equal to null.",
-				leh.isEqual(null, instance1));
-		assertFalse(
-				"Somehow \""+instance2+"\" was equal to null.",
-				leh.isEqual(null, instance2));
-		// reflexive
-		assertTrue(
-				"Somehow \""+instance1+"\" was not equal to itself.",
-				leh.isEqual(instance1, instance1));
-		assertTrue(
-				"Somehow \""+instance2+"\" was not equal to itself.",
-				leh.isEqual(instance2, instance2));
-	}
 	
 	@Test
-	public void testEqualAllNull() throws Exception {
+	public void testAllNull() throws Exception {
 		Person person1 = new Person();
 		Person person2 = new Person();
-		assertEqualsAndHashCodeSymmetry(person1, person2, true);
+		LEHSymmetryUtils.verify(person1, person2, true);
 	}
 	
 	@Test
-	public void testEqualSubclass() throws Exception {
+	public void testSubclass() throws Exception {
 		Person person1 = new Employee();
 		Person person2 = new Employee();
-		assertEqualsAndHashCodeSymmetry(person1, person2, true);
+		LEHSymmetryUtils.verify(person1, person2, true);
 	}
 	
 	@Test
-	public void testNotEqualSubclass() throws Exception {
+	public void testDifferentSubclasses() throws Exception {
 		Person person1 = new Person();
 		Person person2 = new Employee();
-		assertEqualsAndHashCodeSymmetry(person1, person2, false);
+		LEHSymmetryUtils.verify(person1, person2, false);
 	}
 	
 	@Test
-	public void testEqualDespiteIdSubclass() throws Exception {
+	public void testIgnoresFieldsWhereIdentityAnnotationIsPresentAndValueIsDefault() throws Exception {
 		Employee employee1 = new Employee();
 		employee1.setEmployeeId("1");
 		Employee employee2 = new Employee();
 		employee2.setEmployeeId("2");
 		// they are equal, but their id is different, id is part of identity
-		assertEqualsAndHashCodeSymmetry(employee1, employee2, true);
+		LEHSymmetryUtils.verify(
+				employee1, employee2, true,
+				"Employee=[ids={employeeId=1}, salary=0, reportees={}, gender=UNKNOWN, netWorth=0]",
+				"Employee=[ids={employeeId=2}, salary=0, reportees={}, gender=UNKNOWN, netWorth=0]");
 	}
 	
 	@Test
-	public void testEqualWithSameListElement() throws Exception {
+	public void testWithSameListElement() throws Exception {
 		Person person1 = new Person();
 		Person person2 = new Person();
 		Food food1 = new Food();
@@ -115,47 +75,44 @@ public class LEHTest {
 		food2.setType(FoodType.PIZZA);
 		person1.setFavoriteFoods(Arrays.asList(food1));
 		person2.setFavoriteFoods(Arrays.asList(food2));
-		assertEqualsAndHashCodeSymmetry(person1, person2, true);
+		LEHSymmetryUtils.verify(person1, person2, true);
 	}
 	
 	@Test
-	public void testEqualWithReferenceToOtherEqualEntity() throws Exception {
+	public void testWithReferenceToOtherEqualEntity() throws Exception {
 		Person person1 = new Person();
 		Person person2 = new Person();
 		person1.setSpouse(new Person());
 		person2.setSpouse(new Person());
-		assertEqualsAndHashCodeSymmetry(person1, person2, true);
+		LEHSymmetryUtils.verify(person1, person2, true);
 	}
 
 	@Test
-	public void testEqualWithMapEntry() throws Exception {
+	public void testWithMapEntry() throws Exception {
 		Employee employee1 = new Employee();
 		Employee employee2 = new Employee();
 		Employee manager = new Employee();
 		manager.addReportee(manager, employee1);
 		manager.addReportee(manager, employee2);
-		assertEqualsAndHashCodeSymmetry(employee1, employee2, true);
+		LEHSymmetryUtils.verify(employee1, employee2, true);
 	}
 	
 	@Test
-	public void testNotEqualWithMapEntry() throws Exception {
+	public void testWithMapEntryNotEqual() throws Exception {
 		Employee employee1 = new Employee();
 		Employee employee2 = new Employee();
 		Employee manager = new Employee();
 		employee1.addReportee(manager, employee2);
-		if(LEH.getInstance().getHashCode(employee1) == LEH.getInstance().getHashCode(employee2)){
-			System.out.println();
-		}
-		assertEqualsAndHashCodeSymmetry(employee1, employee2, false);
+		LEHSymmetryUtils.verify(employee1, employee2, false);
 	}
 	
 	@Test
-	public void testNotEqualWithMapEntryCompliment() throws Exception {
+	public void testWithMapEntryNotEqualCompliment() throws Exception {
 		Employee employee1 = new Employee();
 		Employee employee2 = new Employee();
 		Employee manager = new Employee();
 		employee1.addReportee(manager, employee1);
-		assertEqualsAndHashCodeSymmetry(employee1, employee2, false);
+		LEHSymmetryUtils.verify(employee1, employee2, false);
 	}
 	
 	@Test
@@ -168,7 +125,7 @@ public class LEHTest {
 		food2.setType(FoodType.TACO);
 		person1.setFavoriteFoods(Arrays.asList(food1));
 		person2.setFavoriteFoods(Arrays.asList(food2));
-		assertEqualsAndHashCodeSymmetry(person1, person2, false);
+		LEHSymmetryUtils.verify(person1, person2, false);
 	}
 	
 	@Test
@@ -181,7 +138,7 @@ public class LEHTest {
 		food2.setType(FoodType.PIZZA);
 		person1.setFavoriteFoods(Arrays.asList(food1));
 		person2.setFavoriteFoods(Arrays.asList(food2, food1));
-		assertEqualsAndHashCodeSymmetry(person1, person2, false);
+		LEHSymmetryUtils.verify(person1, person2, false);
 	}
 	
 	@Test
@@ -194,17 +151,17 @@ public class LEHTest {
 		food2.setType(FoodType.PIZZA);
 		person1.setFavoriteFoods(Arrays.asList(food1));
 		person2.setFavoriteFoods(Arrays.asList(food2, food1));
-		assertEqualsAndHashCodeSymmetry(person1, person2, false);
+		LEHSymmetryUtils.verify(person1, person2, false);
 	}
 	
 	@Test
-	public void testNotEqualWithReferenceToOtherDifferentEntity() throws Exception {
+	public void testNotEqualWithReferenceUnequalEntity() throws Exception {
 		Person person1 = new Person();
 		Person person2 = new Person();
 		person1.setSpouse(new Person());
 		person2.setSpouse(new Person());
 		person2.getSpouse().setBirthDate(new Date());
-		assertEqualsAndHashCodeSymmetry(person1, person2, false);
+		LEHSymmetryUtils.verify(person1, person2, false);
 	}
 	
 	@Test
@@ -238,23 +195,28 @@ public class LEHTest {
 		Employee manager = new Employee();
 		manager.setFirstName("manager");
 		manager.addReportee(manager, employee);
-		assertEquals("Employee=[salary=0, manager=Employee=[salary=0, reportees={this=["+employee.toString()+"]}, firstName=manager, gender=UNKNOWN, netWorth=0], "
-				   + "reportees={}, firstName=employee, gender=UNKNOWN, netWorth=0]", 
-				LEH.getInstance().getToString(employee));
+		LEHSymmetryUtils.verify(employee, manager, false, 
+				"Employee=[salary=0, manager=Employee=[salary=0, reportees={this=["
+						+ employee.toString()+"]}, firstName=manager, gender=UNKNOWN, netWorth=0], "
+						+ "reportees={}, firstName=employee, gender=UNKNOWN, netWorth=0]",
+				"Employee=[salary=0, reportees={this=["
+						+ employee.toString()+"]}, firstName=manager, gender=UNKNOWN, netWorth=0]");
 	}
-
+	
 	// Test for infinite recursion when reused by overriding equals, hashcode, toString
 	
 	@Test
 	public void testReusingLehOverridingEquals() throws Exception {
 		assertEquals(new FoodInventory(), new FoodInventory());
+		LEHSymmetryUtils.verify(new FoodInventory(), new FoodInventory(), true);
 	}
 	
 	@Test
 	public void testReusingLehOverridingEqualsComplimentDifferentClass() throws Exception {
-		assertNotEquals(
-				new FoodInventory(), 
-				new FoodInventory(){/*anonymous inner class is a different class*/});
+		FoodInventory first = new FoodInventory();
+		FoodInventory second = new FoodInventory(){/*anonymous inner class is a different class*/};
+		assertNotEquals(first, second);
+		LEHSymmetryUtils.verify(first, second, false);
 	}
 	
 	@Test
@@ -264,6 +226,7 @@ public class LEHTest {
 		FoodInventory foodInventory2 = new FoodInventory();
 		foodInventory2.setCalories(100);
 		assertNotEquals(foodInventory1, foodInventory2);
+		LEHSymmetryUtils.verify(foodInventory1, foodInventory2, false);
 	}
 	
 	@Test
@@ -309,20 +272,78 @@ public class LEHTest {
 	}
 	
 	@Test
-	public void testEqualsAndHashCodeFromLEHOnWrappedProxyInstance() throws Exception {
+	public void testMultipleLayersOfWrappedProxyInstance() throws Exception {
 		LEHWrapper wrapper = LEHWrapper.getInstance();
-		assertEqualsAndHashCodeSymmetry(wrapper.wrap(new Person()), 
-										wrapper.wrap(new Person()), 
+		// not a smart thing to do, but doesn't hurt the behavior
+		LEHSymmetryUtils.verify(wrapper.wrap(wrapper.wrap(new Person())), 
+									    wrapper.wrap(wrapper.wrap(new Person())), 
 										true);
 	}
 	
 	@Test
-	public void testToStringFromLEHOnWrappedProxyInstance() throws Exception {
-		LEHWrapper wrapper = LEHWrapper.getInstance();
-		assertEquals("Person=[gender=UNKNOWN, netWorth=0]", LEH.getInstance().getToString(wrapper.wrap(new Person())));
+	public void testToStringOnAnonymousInnerClass() throws Exception {
+		Entity meh = new Entity(){
+			@SuppressWarnings("unused")
+			private String name = "Meh";
+			@SuppressWarnings("unused")
+			private int age = 22;
+		};
+		LEHSymmetryUtils.veryifyToString(meh, "Entity$1=[name=Meh, age=22]");
 	}
 	
-	@Test @Ignore("Just for curiosity's sake, and to debug that caching is working")
+	@Test
+	public void testSelfReference() throws Exception {
+		SelfReferencingExample sre1 = new SelfReferencingExample();
+		sre1.instance = sre1;
+		SelfReferencingExample sre2 = new SelfReferencingExample();
+		sre2.instance = sre2;
+		LEHSymmetryUtils.verify(sre1, sre2, true);
+	}
+	
+	@Test
+	public void testSelfReferenceToString() throws Exception {
+		SelfReferencingExample sre = new SelfReferencingExample();
+		sre.instance = sre;
+		LEHSymmetryUtils.veryifyToString(sre, "SelfReferencingExample=[instance=this]");
+	}
+	
+	@Test
+	public void testCrossReference() throws Exception {
+		SelfReferencingExample sre1 = new SelfReferencingExample();
+		SelfReferencingExample sre2 = new SelfReferencingExample();
+		sre2.instance = sre1;
+		sre1.instance = sre2;
+		LEHSymmetryUtils.verify(sre1, sre2, true);
+	}
+	
+	@Test
+	public void testEqualsHashCodeAnonymousInnerClassWrapped() throws Exception {
+		Entity meh = new Entity(){
+			@SuppressWarnings("unused")
+			private String name = "Meh";
+			@SuppressWarnings("unused")
+			private int age = 22;
+		};
+		LEHWrapper leh = LEHWrapper.getInstance();
+		Entity meh2 = leh.wrap(ReflectionUtils.createAnonymous(meh, this));
+		meh = leh.wrap(meh);
+		assertEquals(meh, meh2);
+		assertEquals(meh.hashCode(), meh2.hashCode());
+	}
+	
+	/*
+	 * last count:
+	 * 
+	 * to string took: 41ms
+	 * simple equality test took: 27ms
+     * hashcode test took: 340ms
+     * wrapper to string took: 1011ms
+     * wrapper simple equality test took: 21ms
+     * wrapper hashcode test took: 5ms
+	 * 
+	 * @throws Exception
+	 */
+	@Test @Ignore("Rough approximation of performance")
 	public void test100000Times() throws Exception {
 		Employee person = new Employee();
 		person.setSsn("123456789");
@@ -336,10 +357,48 @@ public class LEHTest {
 		person.setSpouse(spouse);
 		LEH leh = LEH.getInstance();
 		int runs = 100000;
-		List<String> accumulator = new ArrayList<String>(runs);
+		List<Object> accumulator = new ArrayList<Object>(runs);
+		long start = System.currentTimeMillis();
 		for(int i = 0; i < runs; i++){
 			accumulator.add(leh.getToString(leh));
 		}
+		System.out.println("to string took: "
+				+ (System.currentTimeMillis() - start) + "ms");
+		start = System.currentTimeMillis();
+		LEH instance = LEH.getInstance();
+		for(int i = 0; i < runs; i++){
+			accumulator.add(instance.isEqual(person, spouse));
+		}
+		System.out.println("simple equality test took: "
+				+ (System.currentTimeMillis() - start) + "ms");
+		start = System.currentTimeMillis();
+		accumulator.clear();
+		for(int i = 0; i < runs; i++){
+			accumulator.add(instance.getHashCode(person));
+		}
+		System.out.println("hashcode test took: "
+				+ (System.currentTimeMillis() - start) + "ms");
+		Object wrapper = LEHWrapper.getInstance().wrap(person);
+		accumulator.clear();
+		start = System.currentTimeMillis();
+		for(int i = 0; i < runs; i++){
+			accumulator.add(wrapper.toString());
+		}
+		System.out.println("wrapper to string took: "
+				+ (System.currentTimeMillis() - start) + "ms");
+		start = System.currentTimeMillis();
+		for(int i = 0; i < runs; i++){
+			accumulator.add(wrapper.equals(spouse));
+		}
+		System.out.println("wrapper simple equality test took: "
+				+ (System.currentTimeMillis() - start) + "ms");
+		start = System.currentTimeMillis();
+		accumulator.clear();
+		for(int i = 0; i < runs; i++){
+			accumulator.add(person.hashCode());
+		}
+		System.out.println("wrapper hashcode test took: "
+				+ (System.currentTimeMillis() - start) + "ms");
 	}
 	
 }

@@ -22,7 +22,7 @@ import leh.util.wrappers.LEHInvocationHandler;
  * instance implementing Entity to assume how their equals, hashCode, and
  * toString methods should operate.
  */
-public class LEH {
+public class LEH implements LEHDelegate {
 	
 	/**
 	 * Private instance, for use internally.
@@ -105,21 +105,9 @@ public class LEH {
 	public static LEH getInstance(){
 		return immutableInstance;
 	}
-	
+
 	/**
-	 * To return true either of the statements:<BR> 
-	 *     instance1 == instance2;<BR>
-	 *     instance1.equals(instace2);<BR> 
-	 * evaluate to true; or if both instances are of types that implement Entity, 
-	 * than fields may be tested by reflection for equality. Values found to be 
-	 * of types implementing Entity in reflectively testing for equality enter 
-	 * the same test.
-	 * 
-	 * @see leh.util.Entity
-	 * @see leh.annotations.Identity
-	 * @param instance1
-	 * @param instance2
-	 * @return
+	 * @see leh.util.LEHDelegate.isEqual(Object instance1, Object instance2)
 	 */
 	public boolean isEqual(Object instance1, Object instance2){
 		return isEqual(instance1, instance2, isEntity(instance1));
@@ -141,7 +129,7 @@ public class LEH {
 	 * @return
 	 */
 	public boolean isEqual(Object instance1, Object instance2, boolean isEntity){
-		return areValuesEqual(instance1, instance2, equalsHashCodeFields, isEntity);
+		return areValuesEqual(instance1, instance2, equalsHashCodeFields, new ArrayList<Object>(), isEntity);
 	}
 	
 	/**
@@ -157,24 +145,16 @@ public class LEH {
 	 * @return
 	 */
 	public boolean isIdentity(Object instance1, Object instance2){
-		return areValuesEqual(instance1, instance2, identities);
-	}
-
-	/**
-	 * Returns true when the values in both instances for each field found in
-	 * supplied mappings are equal.
-	 * 
-	 * @param instance1
-	 * @param instance2
-	 * @param fields
-	 * @return
-	 */
-	private boolean areValuesEqual(Object instance1, Object instance2, Map<Class<?>, List<Field>> fields) {
-		return areValuesEqual(instance1, instance2, fields, isEntity(instance1));
+		return areValuesEqual(instance1, instance2, identities, new ArrayList<Object>(), isEntity(instance1));
 	}
 
 	private boolean areValuesEqual(Object instance1, Object instance2,
-			Map<Class<?>, List<Field>> fields, boolean isEntity) {
+			Map<Class<?>, List<Field>> fields, List<Object> evaluated) {
+		return areValuesEqual(instance1, instance2, fields, evaluated, isEntity(instance1));
+	}
+	
+	private boolean areValuesEqual(Object instance1, Object instance2,
+			Map<Class<?>, List<Field>> fields, List<Object> evaluated, boolean isEntity) {
 		if(instance1 == instance2){
 			return true;  
 		}
@@ -182,15 +162,22 @@ public class LEH {
 			return false;
 		}
 		if(instance1 instanceof Iterable<?> && instance2 instanceof Iterable<?>){
-			return getIterableEquals(instance1, instance2, fields);
+			return getIterableEquals(instance1, instance2, fields, evaluated);
 		}
 		if(instance1 instanceof Map && instance2 instanceof Map){ 
-			return getMapEquals(instance1, instance2, fields);
+			return getMapEquals(instance1, instance2, fields, evaluated);
 		}
 		if(isEntity){
+			if(evaluated.contains(instance1)){
+				return true;
+			}
+			evaluated.add(instance1);
 			if(resolveClass(instance1) == resolveClass(instance2)){
 				for(Field f : getFields(fields, resolveClass(instance1), isEntity)){
-					if(!isEqual(getValue(f, instance1), getValue(f, instance2))){
+					if(!areValuesEqual(getValue(f, instance1), 
+									   getValue(f, instance2), 
+									   fields, 
+									   evaluated)){
 						return false;
 					}
 				}
@@ -249,7 +236,7 @@ public class LEH {
 	 * @param fields
 	 * @return
 	 */
-	private boolean getMapEquals(Object instance1, Object instance2, Map<Class<?>, List<Field>> fields) {
+	private boolean getMapEquals(Object instance1, Object instance2, Map<Class<?>, List<Field>> fields, List<Object> evaluated) {
 		if(((Map<?,?>)instance1).size() != ((Map<?,?>)instance2).size()){
 			return false;
 		}
@@ -257,7 +244,7 @@ public class LEH {
 			boolean foundValue = false;
 			Object value1 = o1.getValue(), value2 = null;
 			for(Entry<?, ?> o2 : ((Map<?,?>)instance2).entrySet()){
-				if(areValuesEqual(o1.getKey(), o2.getKey(), fields)){
+				if(areValuesEqual(o1.getKey(), o2.getKey(), fields, evaluated)){
 					foundValue = true;
 					value2 = o2.getValue();
 					break;
@@ -281,7 +268,8 @@ public class LEH {
 	 * @param fields
 	 * @return
 	 */
-	private boolean getIterableEquals(Object instance1, Object instance2, Map<Class<?>, List<Field>> fields) {
+	private boolean getIterableEquals(Object instance1, Object instance2, 
+			Map<Class<?>, List<Field>> fields, List<Object> evaluated) {
 		if((instance1 instanceof Collection && instance2 instanceof Collection && 
 				((Collection<?>)instance1).size() != ((Collection<?>)instance2).size()) ||
 			instance1 instanceof Map && instance2 instanceof Map && 
@@ -291,7 +279,7 @@ public class LEH {
 		for(Object o1 : (Iterable<?>)instance1){
 			boolean foundEqual = false;
 			for(Object o2 : (Iterable<?>)instance2){
-				if(areValuesEqual(o1, o2, fields)){
+				if(areValuesEqual(o1, o2, fields, evaluated)){
 					foundEqual = true;
 					break;
 				}
@@ -304,11 +292,7 @@ public class LEH {
 	}
 
 	/**
-	 * Reflectively access fields and accumulate hashcode values as implemented
-	 * specifically, implied by Entity inheritance.
-	 * 
-	 * @param instance
-	 * @return
+	 * @see leh.util.LEHDelegate.getHashCode()
 	 */
 	public int getHashCode(Object instance){
 		return getHashCode(instance, isEntity(instance));
@@ -358,7 +342,7 @@ public class LEH {
 					instanceClass = instance.getClass();
 				}
 				int hashCode = instanceClass.hashCode();
-				Map<String, Object> valuesByFieldName = getValueByFieldName(instance, getFields(equalsHashCodeFields, instance.getClass(), isEntity));
+				Map<String, Object> valuesByFieldName = getValueByFieldName(instance, getFields(equalsHashCodeFields, resolveClass(instance), isEntity));
 				for(Entry<String, Object> fieldNameAndValue : valuesByFieldName.entrySet()){
 					Object value = fieldNameAndValue.getValue();
 					int tempHashCode = 0;
@@ -384,11 +368,7 @@ public class LEH {
 	}
 
 	/**
-	 * Reflectively access fields and accumulate toString values as implemented
-	 * specifically, implied by Entity inheritance.
-	 * 
-	 * @param o
-	 * @return
+	 * @see leh.util.LEHDelegate.getToString()
 	 */
 	public String getToString(Object instance){
 		return getToString(instance, isEntity(instance), new ArrayList<Object>());
@@ -692,11 +672,13 @@ public class LEH {
 		while(lClass != null){
 			if(isEntity){
 				for(Field f : lClass.getDeclaredFields()){
-					Identity identity = f.getAnnotation(Identity.class);
-					if(!f.isAnnotationPresent(Transient.class) && (identity == null || identity.value())){
-						equalsFields.add(f);
-					}else{
-						identityFields.add(f);
+					if(!f.isSynthetic()){
+						Identity identity = f.getAnnotation(Identity.class);
+						if(!f.isAnnotationPresent(Transient.class) && (identity == null || identity.value())){
+							equalsFields.add(f);
+						}else{
+							identityFields.add(f);
+						}
 					}
 				}
 			}
