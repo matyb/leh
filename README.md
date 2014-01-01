@@ -27,11 +27,11 @@ A marker interface indicating an instance is eligible for evaluation by LEH. Obj
 ```
 leh.util.annotations.Identity
 ```  
-Indicates a compliment to equality. Fields annotated with ```@Identity``` are intended to indicate primary keys. By default fields annotated with this type are not evaluated in equals or hashCode. To include these fields annotate with the true value ```@Identity(true)``` to indicate the field does participate in equality/hashCode evaluation.
+A field level annotation indicating a compliment or component of equality. Fields annotated with ```@Identity``` are intended to indicate primary keys. _By default_ fields annotated with this type are _not evaluated in equals or hashCode_. To include these fields annotate with the true value ```@Identity(true)``` to indicate the field does participate in equality/hashCode evaluation.
 ```
 leh.util.LEH
 ```  
-Reflectively access fields of Entity instances for equals/hashCode/toString determinations. Instances discovered in evaluation that do not implement Entity are merely evaluated per their implementation of equals/hashCode/toString.
+Provides Object equals/hashCode/toString equivalents in a generic, reflective and reusable form. Reflectively accesses fields of Entity instances for equals/hashCode/toString determinations. Instances discovered in evaluation that do not implement Entity are merely evaluated per their implementation of equals/hashCode/toString.
 ```
 leh.util.wrappers.LEHWrapper
 ```  
