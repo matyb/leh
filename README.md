@@ -1,7 +1,7 @@
 LEH
 ===
 
-Generic reusable java equals, hashCode, toString methods implemented with reflection and an optional notion of identities. Seperates concept of identity and logical equality to permit comparing equality at the value level with optional consideration for primary key identity. Can be used for avoiding statically defining logical equals/hashCode/toString - however generated or non-reflective implementations are still recommended in performance instansive contexts. 
+Generic reusable java equals, hashCode, toString methods implemented with reflection and an optional notion of identities. Seperates concept of identity and logical equality to permit comparing equality at the value level with optional consideration for primary key identity. Can be used for avoiding statically defining logical equals/hashCode/toString - however generated or non-reflective implementations are still recommended in performance intensive contexts. 
 
 Why do I need a different form of equality?
 -------------------------------------------
