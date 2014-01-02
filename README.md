@@ -56,8 +56,8 @@ Get a reference to the Wrapper factory:
 ```LEHWrapper wrapper = LEHWrapper.getInstance();```  
 "Wrap" the instances returning a new wrapper that dispatches equals/hashCode/toString to LEH instead of java.lang.Object.
 ```
-someObject1 = wrapper.wrap(object1);
-someObject2 = wrapper.wrap(new Object());
+Object someObject1 = wrapper.wrap(new Object());
+Object someObject2 = wrapper.wrap(new Object());
 ```
 The wrapper does implement logical equality, hashCode, and toString:
 ```
