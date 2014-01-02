@@ -172,8 +172,10 @@ public class LEH implements LEHDelegate {
 				return true;
 			}
 			evaluated.add(instance1);
-			if(resolveClass(instance1) == resolveClass(instance2)){
-				for(Field f : getFields(fields, resolveClass(instance1), isEntity)){
+			Class<?> class1 = resolveClass(instance1);
+			Class<?> class2 = resolveClass(instance2);
+			if(class1 == class2){
+				for(Field f : getFields(fields, class1, isEntity)){
 					if(!areValuesEqual(getValue(f, instance1), 
 									   getValue(f, instance2), 
 									   fields, 
@@ -216,11 +218,15 @@ public class LEH implements LEHDelegate {
 	 */
 	private Object resolveInstance(Object instance) {
 		Class<?> c = instance.getClass();
-		if(Proxy.isProxyClass(c)){
+		while(Proxy.isProxyClass(c)){
 			Object invocationHandler = Proxy.getInvocationHandler(instance);
 			if(invocationHandler instanceof LEHInvocationHandler){
-				return resolveInstance(((LEHInvocationHandler)invocationHandler).getWrappedInstance());
+				instance = ((LEHInvocationHandler)invocationHandler).getWrappedInstance();
+				c = instance.getClass();
+			}else{
+				break;
 			}
+			
 		}
 		return instance;
 	}
@@ -336,11 +342,8 @@ public class LEH implements LEHDelegate {
 			}
 			evaluated.add(instance);
 			if(isEntity){
+				instance = resolveInstance(instance);
 				Class<? extends Object> instanceClass = instance.getClass();
-				if(Proxy.isProxyClass(instanceClass)){
-					instance = ((LEHInvocationHandler)Proxy.getInvocationHandler(instance)).getWrappedInstance();
-					instanceClass = instance.getClass();
-				}
 				int hashCode = instanceClass.hashCode();
 				Map<String, Object> valuesByFieldName = getValueByFieldName(instance, getFields(equalsHashCodeFields, resolveClass(instance), isEntity));
 				for(Entry<String, Object> fieldNameAndValue : valuesByFieldName.entrySet()){
@@ -415,31 +418,32 @@ public class LEH implements LEHDelegate {
 		String toString;
 		if(isEntity){
 			if(evaluated.contains(instance)){
-				return "this";
-			}
-			evaluated.add(instance);
-			Class<?> instanceClass = resolveClass(instance);
-			Class<?> tempClass = instanceClass;
-			while(tempClass.isAnonymousClass()){
-				if(tempClass.getInterfaces() != null && tempClass.getInterfaces().length > 0){
-					tempClass = tempClass.getInterfaces()[0];
-				}else{
-					tempClass = tempClass.getSuperclass();
+				toString = "this";
+			}else{
+				evaluated.add(instance);
+				Class<?> instanceClass = resolveClass(instance);
+				Class<?> tempClass = instanceClass;
+				while(tempClass.isAnonymousClass()){
+					if(tempClass.getInterfaces() != null && tempClass.getInterfaces().length > 0){
+						tempClass = tempClass.getInterfaces()[0];
+					}else{
+						tempClass = tempClass.getSuperclass();
+					}
 				}
-			}
-			toString = tempClass.getSimpleName() + (tempClass == instanceClass ? "" : ("$1"))  + "=[";
-			String seperator = ", ";
-			List<Field> fields = getFields(identities, instanceClass, isEntity);
-			String idsString = getToString("ids={", instance, seperator, fields, "}", evaluated);
-			toString += idsString;
-			fields = getFields(equalsHashCodeFields, instanceClass, isEntity);
-			if(fields.size() > 0){
-				if(idsString.length() > 0){
-					toString += seperator;
+				toString = tempClass.getSimpleName() + (tempClass == instanceClass ? "" : ("$1"))  + "=[";
+				String seperator = ", ";
+				List<Field> fields = getFields(identities, instanceClass, isEntity);
+				String idsString = getToString("ids={", instance, seperator, fields, "}", evaluated);
+				toString += idsString;
+				fields = getFields(equalsHashCodeFields, instanceClass, isEntity);
+				if(fields.size() > 0){
+					if(idsString.length() > 0){
+						toString += seperator;
+					}
+					toString += getToString(instance, seperator, fields, evaluated);
 				}
-				toString += getToString(instance, seperator, fields, evaluated);
+				toString += "]";
 			}
-			toString += "]";
 		}else{
 			toString = String.valueOf(instance); 
 		}

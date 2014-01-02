@@ -11,10 +11,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import leh.example.Meh;
+import leh.util.ReflectionUtils;
 
 import org.junit.Test;
-
-import leh.util.ReflectionUtils;
 
 public class LEHWrapperTest {
 	
@@ -160,7 +159,7 @@ public class LEHWrapperTest {
 			}
 		};
 		Object meh1 = LEHWrapper.getInstance().wrap(meh, LEHMethodHandlers.EQUALS_HASHCODE_METHODS);
-		assertEquals("Not intercepted!", meh1.toString());
+		assertEquals(meh.toString(), meh1.toString());
 		Object meh2 = LEHWrapper.getInstance().wrap(ReflectionUtils.createAnonymous(meh, this)); // implements all 3 methods
 		assertEquals(meh1, meh2);
 		assertEquals(meh2, meh1);
