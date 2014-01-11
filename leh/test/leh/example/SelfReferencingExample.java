@@ -1,7 +1,7 @@
 package leh.example;
 
-import leh.util.Entity;
+import leh.util.LEHAware;
 
-public class SelfReferencingExample implements Entity {
+public class SelfReferencingExample implements LEHAware {
 	public SelfReferencingExample instance;
 }

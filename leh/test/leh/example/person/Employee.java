@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import leh.annotations.Identity;
-import leh.util.Entity;
+import leh.util.LEHAware;
 
-public class Employee extends Person implements Entity {
+public class Employee extends Person implements LEHAware {
 
 	private long salary;
 	private Employee manager;

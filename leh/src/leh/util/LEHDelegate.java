@@ -10,7 +10,7 @@ public interface LEHDelegate {
 	 * of types implementing Entity in reflectively testing for equality enter 
 	 * the same test.
 	 * 
-	 * @see leh.util.Entity
+	 * @see leh.util.LEHAware
 	 * @see leh.annotations.Identity
 	 * @param instance1
 	 * @param instance2

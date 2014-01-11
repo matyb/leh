@@ -1,7 +1,6 @@
 package leh.util;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import leh.annotations.Identity;
 import leh.annotations.Transient;
-import leh.util.wrappers.LEHInvocationHandler;
+import leh.util.wrappers.LEHMethodHandler;
 
 /**
  * A utility class that operates on Entity instances or on the presumption of an
@@ -34,8 +33,7 @@ public class LEH implements LEHDelegate {
 	 * exposed externally.
 	 */
 	private static LEH immutableInstance = 
-			new LEH(
-					Collections.unmodifiableMap(instance.identities),
+			new LEH(Collections.unmodifiableMap(instance.identities),
 					Collections.unmodifiableMap(instance.equalsHashCodeFields));
 	
 	/**
@@ -121,14 +119,14 @@ public class LEH implements LEHDelegate {
 	 * tested by reflection for equality. Values found to be of types implementing 
 	 * Entity in reflectively testing for equality enter the same test.
 	 * 
-	 * @see leh.util.Entity
+	 * @see leh.util.LEHAware
 	 * @see leh.annotations.Identity
 	 * @param instance1
 	 * @param instance2
 	 * @param isEntity
 	 * @return
 	 */
-	public boolean isEqual(Object instance1, Object instance2, boolean isEntity){
+	boolean isEqual(Object instance1, Object instance2, boolean isEntity){
 		return areValuesEqual(instance1, instance2, equalsHashCodeFields, new ArrayList<Object>(), isEntity);
 	}
 	
@@ -138,7 +136,7 @@ public class LEH implements LEHDelegate {
 	 * both instances. Values found to be of types implementing Entity in 
 	 * reflectively testing for identity enter the same test recursively.
 	 * 
-	 * @see leh.util.Entity
+	 * @see leh.util.LEHAware
 	 * @see leh.annotations.Identity
 	 * @param instance1
 	 * @param instance2
@@ -217,18 +215,7 @@ public class LEH implements LEHDelegate {
 	 * @return
 	 */
 	private Object resolveInstance(Object instance) {
-		Class<?> c = instance.getClass();
-		while(Proxy.isProxyClass(c)){
-			Object invocationHandler = Proxy.getInvocationHandler(instance);
-			if(invocationHandler instanceof LEHInvocationHandler){
-				instance = ((LEHInvocationHandler)invocationHandler).getWrappedInstance();
-				c = instance.getClass();
-			}else{
-				break;
-			}
-			
-		}
-		return instance;
+		return LEHMethodHandler.unwrapLEHProxy(instance);
 	}
 
 	/**
@@ -325,7 +312,7 @@ public class LEH implements LEHDelegate {
 	 * @param isEntity 
 	 * @return
 	 */
-	public int getHashCode(Object instance, boolean isEntity){
+	int getHashCode(Object instance, boolean isEntity){
 		return getHashCode(instance, new ArrayList<Object>(), isEntity);
 	}
 	
@@ -388,7 +375,7 @@ public class LEH implements LEHDelegate {
 	 * @param o
 	 * @return
 	 */
-	public String getToString(Object instance, boolean isEntity){
+	String getToString(Object instance, boolean isEntity){
 		return getToString(instance, isEntity, new ArrayList<Object>());
 	}
 
@@ -709,7 +696,7 @@ public class LEH implements LEHDelegate {
 		}else{
 			c = (Class<?>)instance;
 		}
-		return Entity.class.isAssignableFrom(c);
+		return LEHAware.class.isAssignableFrom(c);
 	}	
 	
 	/**

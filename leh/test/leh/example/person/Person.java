@@ -6,9 +6,9 @@ import java.util.List;
 
 import leh.annotations.Identity;
 import leh.example.food.Food;
-import leh.util.Entity;
+import leh.util.LEHAware;
 
-public class Person implements Entity {
+public class Person implements LEHAware {
 
 	enum Gender {MALE, FEMALE, UNKNOWN};
 	

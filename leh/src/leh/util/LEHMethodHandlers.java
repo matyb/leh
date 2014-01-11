@@ -1,10 +1,11 @@
-package leh.util.wrappers;
+package leh.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import leh.util.LEH;
+import leh.util.wrappers.LEHMethodHandler;
+import leh.util.wrappers.MethodHandler;
 
 /**
  * The constants for MethodHandler implementations LEH supports.
@@ -19,9 +20,9 @@ public class LEHMethodHandlers extends ArrayList<MethodHandler>{
 	 * 
 	 * @see wrap(Object instance, List<MethodHandler> methodHandlers)
 	 */
-	public final static MethodHandler EQUALS = new MethodHandler("equals", new Class[]{Object.class}) {
+	public final static MethodHandler EQUALS = new LEHMethodHandler("equals", new Class[]{Object.class}) {
 		@Override
-		public Object invoke(Object instance, Object... args) {
+		public Object invokeOnUnwrappedLEHProxyInstances(Object instance, Object... args) {
 			return LEH.getInstance().isEqual(instance, args[0], true);
 		}
 	};
@@ -31,9 +32,9 @@ public class LEHMethodHandlers extends ArrayList<MethodHandler>{
 	 * 
 	 * @see wrap(Object instance, List<MethodHandler> methodHandlers)
 	 */
-	public final static MethodHandler HASHCODE = new MethodHandler("hashCode", new Class[0]) {
+	public final static MethodHandler HASHCODE = new LEHMethodHandler("hashCode", new Class[0]) {
 		@Override
-		public Object invoke(Object instance, Object... args) {
+		public Object invokeOnUnwrappedLEHProxyInstances(Object instance, Object... args) {
 			return LEH.getInstance().getHashCode(instance, true);
 		}
 	};
@@ -43,9 +44,9 @@ public class LEHMethodHandlers extends ArrayList<MethodHandler>{
 	 * 
 	 * @see wrap(Object instance, List<MethodHandler> methodHandlers)
 	 */
-	public final static MethodHandler TOSTRING = new MethodHandler("toString", new Class[0]) {
+	public final static MethodHandler TOSTRING = new LEHMethodHandler("toString", new Class[0]) {
 		@Override
-		public Object invoke(Object instance, Object... args) {
+		public Object invokeOnUnwrappedLEHProxyInstances(Object instance, Object... args) {
 			return LEH.getInstance().getToString(instance, true);
 		}
 	};

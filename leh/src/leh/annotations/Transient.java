@@ -5,11 +5,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Ignored from equality tests and hashcode calculations when evaluated within
+ * leh.util.LEH methods, but not considered part of identity.
+ */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-/**
- * Ignored from equality tests and hashcode calculations, but not considered part of identity. 
- */
 public @interface Transient {
 
 }

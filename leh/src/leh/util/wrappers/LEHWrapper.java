@@ -7,7 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import leh.util.Entity;
+import leh.util.LEHAware;
+import leh.util.LEHMethodHandlers;
 
 /**
  * Wraps objects in a proxy with optional interfaces and MethodHandlers. 
@@ -54,11 +55,11 @@ public class LEHWrapper {
 	 * Returns a proxy wrapping the passed in instance that implements
 	 * equals/hashcode/toString via Entity with LEH.
 	 * 
-	 * @see leh.util.Entity
+	 * @see leh.util.LEHAware
 	 * @param instance
 	 * @return
 	 */
-	public Entity wrap(Object instance) {
+	public LEHAware wrap(Object instance) {
 		return wrap(instance, methodHandlers);
 	}
 	
@@ -66,23 +67,23 @@ public class LEHWrapper {
 	 * Returns a proxy wrapping the passed in instance that implements any of
 	 * the supplied equals/hashcode/toString handlers via Entity with LEH.
 	 * 
-	 * @see leh.util.Entity
+	 * @see leh.util.LEHAware
 	 * @param instance
 	 * @return
 	 */
-	public Entity wrap(Object instance, List<MethodHandler> handlers) {
-		return (Entity)wrap(instance, handlers, Entity.class, new Class[0]);
+	public LEHAware wrap(Object instance, List<MethodHandler> handlers) {
+		return (LEHAware)wrap(instance, handlers, LEHAware.class, new Class[0]);
 	}
 	
 	/**
 	 * Returns a list of proxies wrapping the passed in instances. Each
 	 * implements equals/hashcode/toString via Entity with LEH.
 	 * 
-	 * @see leh.util.Entity
+	 * @see leh.util.LEHAware
 	 * @param instances
 	 * @return
 	 */
-	public List<Entity> wrap(List<Object> instances) {
+	public List<LEHAware> wrap(List<Object> instances) {
 		return wrap(instances, methodHandlers);
 	}
 	
@@ -91,12 +92,12 @@ public class LEHWrapper {
 	 * implements any of the supplied equals/hashcode/toString handlers via
 	 * Entity with LEH.
 	 * 
-	 * @see leh.util.Entity
+	 * @see leh.util.LEHAware
 	 * @param instances
 	 * @return
 	 */
-	public List<Entity> wrap(List<Object> instances, List<MethodHandler> handlers) {
-		List<Entity> entities = new ArrayList<Entity>(instances.size());
+	public List<LEHAware> wrap(List<Object> instances, List<MethodHandler> handlers) {
+		List<LEHAware> entities = new ArrayList<LEHAware>(instances.size());
 		for(Object instance : instances){
 			entities.add(wrap(instance, handlers));
 		}
@@ -111,13 +112,13 @@ public class LEHWrapper {
 	 * have a concrete implementation of any specified methods nor
 	 * a handler associated for the call.
 	 * 
-	 * @see leh.util.Entity
+	 * @see leh.util.LEHAware
 	 * @param instance
 	 * @param ifaces
 	 * @return
 	 */
-	public Entity wrap(Object instance, Class<?>...ifaces) {
-		return (Entity)wrap(instance, methodHandlers, Entity.class, ifaces);
+	public LEHAware wrap(Object instance, Class<?>...ifaces) {
+		return (LEHAware)wrap(instance, methodHandlers, LEHAware.class, ifaces);
 	}
 	
 	/**
@@ -138,7 +139,7 @@ public class LEHWrapper {
 	@SuppressWarnings("unchecked")
 	public <T> T wrap(Object instance, List<MethodHandler> handlers, Class<T> referencedInterfaceType, Class<?>... ifaces) {
 		Set<Class<?>> interfaces = new HashSet<Class<?>>(Arrays.asList(ifaces));
-		interfaces.add(Entity.class);
+		interfaces.add(LEHAware.class);
 		interfaces.add(referencedInterfaceType);
 		Class<?> clazz = instance.getClass();
 		while(clazz != null){
@@ -159,12 +160,12 @@ public class LEHWrapper {
 	 * have a concrete implementation of any specified methods nor
 	 * a handler associated for the call.
 	 * 
-	 * @see leh.util.Entity
+	 * @see leh.util.LEHAware
 	 * @param instance
 	 * @param ifaces
 	 * @return
 	 */
-	public List<Entity> wrap(List<Object> instances, Class<?>...ifaces) {
+	public List<LEHAware> wrap(List<Object> instances, Class<?>...ifaces) {
 		return wrap(instances, methodHandlers, ifaces);
 	}
 	
@@ -181,10 +182,10 @@ public class LEHWrapper {
 	 * @param ifaces
 	 * @return
 	 */
-	public List<Entity> wrap(List<Object> instances, List<MethodHandler> handlers, Class<?>...ifaces) {
-		List<Entity> entities = new ArrayList<Entity>(instances.size());
+	public List<LEHAware> wrap(List<Object> instances, List<MethodHandler> handlers, Class<?>...ifaces) {
+		List<LEHAware> entities = new ArrayList<LEHAware>(instances.size());
 		for(Object instance : instances){
-			entities.add(wrap(instance, handlers, Entity.class, ifaces));
+			entities.add(wrap(instance, handlers, LEHAware.class, ifaces));
 		}
 		return entities;
 	}

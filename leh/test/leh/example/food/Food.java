@@ -1,9 +1,9 @@
 package leh.example.food;
 
 import leh.annotations.Identity;
-import leh.util.Entity;
+import leh.util.LEHAware;
 
-public class Food implements Entity {
+public class Food implements LEHAware {
 
 	public enum FoodType {PIZZA, TACO};
 	

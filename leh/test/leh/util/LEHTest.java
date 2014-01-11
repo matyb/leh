@@ -1,11 +1,10 @@
 package leh.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 import leh.example.SelfReferencingExample;
 import leh.example.food.Food;
@@ -15,7 +14,6 @@ import leh.example.person.Employee;
 import leh.example.person.Person;
 import leh.util.wrappers.LEHWrapper;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -282,13 +280,13 @@ public class LEHTest {
 	
 	@Test
 	public void testToStringOnAnonymousInnerClass() throws Exception {
-		Entity meh = new Entity(){
+		LEHAware meh = new LEHAware(){
 			@SuppressWarnings("unused")
 			private String name = "Meh";
 			@SuppressWarnings("unused")
 			private int age = 22;
 		};
-		LEHSymmetryUtils.veryifyToString(meh, "Entity$1=[name=Meh, age=22]");
+		LEHSymmetryUtils.veryifyToString(meh, "LEHAware$1=[name=Meh, age=22]");
 	}
 	
 	@Test
@@ -318,87 +316,17 @@ public class LEHTest {
 	
 	@Test
 	public void testEqualsHashCodeAnonymousInnerClassWrapped() throws Exception {
-		Entity meh = new Entity(){
+		LEHAware meh = new LEHAware(){
 			@SuppressWarnings("unused")
 			private String name = "Meh";
 			@SuppressWarnings("unused")
 			private int age = 22;
 		};
 		LEHWrapper leh = LEHWrapper.getInstance();
-		Entity meh2 = leh.wrap(ReflectionUtils.createAnonymous(meh, this));
+		LEHAware meh2 = leh.wrap(ReflectionUtils.createAnonymous(meh, this));
 		meh = leh.wrap(meh);
 		assertEquals(meh, meh2);
 		assertEquals(meh.hashCode(), meh2.hashCode());
-	}
-	
-	/*
-	 * last count:
-	 * 
-	 * to string took: 41ms
-	 * simple equality test took: 27ms
-     * hashcode test took: 340ms
-     * wrapper to string took: 1011ms
-     * wrapper simple equality test took: 21ms
-     * wrapper hashcode test took: 5ms
-	 * 
-	 * @throws Exception
-	 */
-	@Test @Ignore("Rough approximation of performance")
-	public void test100000Times() throws Exception {
-		Employee person = new Employee();
-		person.setSsn("123456789");
-		Date birthDate = new Date();
-		person.setBirthDate(birthDate);
-		Person spouse = new Person();
-		Food food = new Food();
-		food.setType(FoodType.PIZZA);
-		spouse.setFavoriteFoods(Arrays.asList(food));
-		spouse.setFirstName("Brian");
-		person.setSpouse(spouse);
-		LEH leh = LEH.getInstance();
-		int runs = 100000;
-		List<Object> accumulator = new ArrayList<Object>(runs);
-		long start = System.currentTimeMillis();
-		for(int i = 0; i < runs; i++){
-			accumulator.add(leh.getToString(leh));
-		}
-		System.out.println("to string took: "
-				+ (System.currentTimeMillis() - start) + "ms");
-		start = System.currentTimeMillis();
-		LEH instance = LEH.getInstance();
-		for(int i = 0; i < runs; i++){
-			accumulator.add(instance.isEqual(person, spouse));
-		}
-		System.out.println("simple equality test took: "
-				+ (System.currentTimeMillis() - start) + "ms");
-		start = System.currentTimeMillis();
-		accumulator.clear();
-		for(int i = 0; i < runs; i++){
-			accumulator.add(instance.getHashCode(person));
-		}
-		System.out.println("hashcode test took: "
-				+ (System.currentTimeMillis() - start) + "ms");
-		Object wrapper = LEHWrapper.getInstance().wrap(person);
-		accumulator.clear();
-		start = System.currentTimeMillis();
-		for(int i = 0; i < runs; i++){
-			accumulator.add(wrapper.toString());
-		}
-		System.out.println("wrapper to string took: "
-				+ (System.currentTimeMillis() - start) + "ms");
-		start = System.currentTimeMillis();
-		for(int i = 0; i < runs; i++){
-			accumulator.add(wrapper.equals(spouse));
-		}
-		System.out.println("wrapper simple equality test took: "
-				+ (System.currentTimeMillis() - start) + "ms");
-		start = System.currentTimeMillis();
-		accumulator.clear();
-		for(int i = 0; i < runs; i++){
-			accumulator.add(person.hashCode());
-		}
-		System.out.println("wrapper hashcode test took: "
-				+ (System.currentTimeMillis() - start) + "ms");
 	}
 	
 }

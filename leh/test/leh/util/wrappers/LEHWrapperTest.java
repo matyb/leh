@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import leh.example.Meh;
+import leh.util.LEHMethodHandlers;
 import leh.util.ReflectionUtils;
 
 import org.junit.Test;

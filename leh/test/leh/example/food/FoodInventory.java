@@ -1,9 +1,9 @@
 package leh.example.food;
 
-import leh.util.Entity;
+import leh.util.LEHAware;
 import leh.util.LEH;
 
-public class FoodInventory extends Food implements Entity {
+public class FoodInventory extends Food implements LEHAware {
 
 	private long cost;
 	private long price;

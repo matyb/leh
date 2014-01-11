@@ -1,9 +1,9 @@
 package leh.example;
 
 import leh.annotations.Identity;
-import leh.util.Entity;
+import leh.util.LEHAware;
 
-public class Shipment implements Entity {
+public class Shipment implements LEHAware {
 
 	@Identity(true)
 	private String id;
