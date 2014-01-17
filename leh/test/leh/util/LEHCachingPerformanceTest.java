@@ -48,8 +48,8 @@ public class LEHCachingPerformanceTest {
 	 * @throws Exception
 	 */
 	@Test 
-	public void testCachingPerformance_100000times() throws Exception {
-		executePubliclyExposedLEHMethods(100000);
+	public void testCachingPerformance_1000times() throws Exception {
+		executePubliclyExposedLEHMethods(1000);
 	}
 
 	private void executePubliclyExposedLEHMethods(final int runs) {

@@ -1,4 +1,4 @@
-LEH
+LEH  [![Build Status](https://travis-ci.org/matyb/leh.png?branch=master)](https://travis-ci.org/matyb/leh)
 ===
 
 Generic reusable java equals, hashCode, toString methods implemented with reflection and an optional notion of identities. Seperates concept of identity and logical equality to permit comparing equality at the value level with optional consideration for primary key identity. Can be used for avoiding statically defining logical equals/hashCode/toString - however implementing your own equals/hashCode/toString methods are recommended in performance intensive contexts. 
