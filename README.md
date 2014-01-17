@@ -21,7 +21,7 @@ LEH provides logical alternative implementations of the java.lang.Object equals/
 The things you'll use
 ---------------------
 ```
-leh.util.Entity
+leh.util.LEHAware
 ```  
 A marker interface indicating an instance is eligible for evaluation by LEH. Objects not implementing this type (with the exception of Maps and Collections) are evaluated using their implementation of equals/hashCode/toString methods.
 ```
@@ -31,7 +31,7 @@ A field level annotation indicating a compliment or component of equality. Field
 ```
 leh.util.LEH
 ```  
-Provides Object equals/hashCode/toString equivalents in a generic, reflective and reusable form. Reflectively accesses fields of Entity instances for equals/hashCode/toString determinations. Instances discovered in evaluation that do not implement Entity are merely evaluated per their implementation of equals/hashCode/toString.
+Provides Object equals/hashCode/toString equivalents in a generic, reflective and reusable form. Reflectively accesses fields of LEHAware instances for equals/hashCode/toString determinations. Instances discovered in evaluation that do not implement LEHAware are merely evaluated per their implementation of equals/hashCode/toString.
 ```
 leh.util.wrappers.LEHWrapper
 ```  
@@ -40,15 +40,15 @@ A proxy factory that wraps Objects to intercept invocations of equals/hashCode/t
 Usage
 -----
 
-Take a new or existing class and implement leh.util.Entity. This indicates instances of that type are eligible for evaluation by leh.util.LEH. 
+Take a new or existing class and implement leh.util.LEHAware. This indicates instances of that type are eligible for evaluation by leh.util.LEH. A wrapped instance from leh.util.LEHWrapper will be made to implement LEHAware (which makes it eligible for evaluation by leh.util.LEH) and will intercept calls to equals/hashCode/toString and direct them to LEH for evaluation.
 
 Get a reference to LEH singleton:
 ```LEH leh = LEH.getInstance();```  
-To see if two Entity instances are logically equal: ```leh.isEquals(Object instance1, Object instance2)```  
-To get an Entity instance's hashCode derived solely from its type and values: ```leh.getHashCode(Object instance)```  
-To get an Entity instance's toString derived solely from its type and values: ```leh.getToString(Object instance)```  
+To see if two LEHAware instances are logically equal: ```leh.isEquals(Object instance1, Object instance2)```  
+To get an LEHAware instance's hashCode derived solely from its type and values: ```leh.getHashCode(Object instance)```  
+To get an LEHAware instance's toString derived solely from its type and values: ```leh.getToString(Object instance)```  
 
-Wrapper types are available for instances that do not implement Entity, however fields in the wrapped type must contain values implementing Entity or wrapped themselves or their equals/hashCode/toString implementations are used to determine values for equals/hashCode/toString. 
+Wrapper types are available for instances that do not implement LEHAware, however fields in the wrapped type must contain values implementing LEHAware or be wrapped themselves or their equals/hashCode/toString implementations are used to determine values for equals/hashCode/toString. 
 
 Wrapped instances dispatch to leh.util.LEH for equals/hashCode/toString Object method invocations to make the wrapper instance behave as though the wrapped instance honors logical equality regardless of whether the instance actually implements those methods or how:  
 
