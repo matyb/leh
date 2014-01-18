@@ -182,7 +182,7 @@ public class LEHTest {
 		spouse.setFirstName("Brian");
 		person.setSpouse(spouse);
 		assertEquals("Employee=[ids={ssn=123456789}, salary=0, reportees={}, birthDate="+birthDate+", gender=UNKNOWN, netWorth=0, "
-					+"spouse=Person=[firstName=Brian, favoriteFoods=[Food=[calories=0, sodium=0, type=PIZZA]], gender=UNKNOWN, netWorth=0]]", 
+					+"spouse=Person=[firstName=Brian, favoriteFoods=[Food=[ids={type=PIZZA}, calories=0, sodium=0]], gender=UNKNOWN, netWorth=0]]", 
 					LEH.getInstance().getToString(person));
 	}
 	
@@ -193,11 +193,12 @@ public class LEHTest {
 		Employee manager = new Employee();
 		manager.setFirstName("manager");
 		manager.addReportee(manager, employee);
+		int mgrHashCode = LEH.getInstance().getHashCode(manager);
 		LEHSymmetryUtils.verify(employee, manager, false, 
-				"Employee=[salary=0, manager=Employee=[salary=0, reportees={this=["
+				"Employee=[salary=0, manager=Employee=[salary=0, reportees={parentReference#"+mgrHashCode+"=["
 						+ employee.toString()+"]}, firstName=manager, gender=UNKNOWN, netWorth=0], "
 						+ "reportees={}, firstName=employee, gender=UNKNOWN, netWorth=0]",
-				"Employee=[salary=0, reportees={this=["
+				"Employee=[salary=0, reportees={parentReference#"+mgrHashCode+"=["
 						+ employee.toString()+"]}, firstName=manager, gender=UNKNOWN, netWorth=0]");
 	}
 	
@@ -302,7 +303,9 @@ public class LEHTest {
 	public void testSelfReferenceToString() throws Exception {
 		SelfReferencingExample sre = new SelfReferencingExample();
 		sre.instance = sre;
-		LEHSymmetryUtils.veryifyToString(sre, "SelfReferencingExample=[instance=this]");
+		int hashCode = LEH.getInstance().getHashCode(sre);
+		LEHSymmetryUtils.veryifyToString(sre,
+				"SelfReferencingExample=[ids={instance=parentReference#" + hashCode + "}]");
 	}
 	
 	@Test

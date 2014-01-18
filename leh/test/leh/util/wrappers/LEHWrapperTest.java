@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import leh.example.Meh;
+import leh.example.SelfReferencingExample;
 import leh.util.LEHMethodHandlers;
 import leh.util.ReflectionUtils;
 
@@ -165,6 +166,47 @@ public class LEHWrapperTest {
 		assertEquals(meh1, meh2);
 		assertEquals(meh2, meh1);
 		assertEquals(meh1.hashCode(), meh2.hashCode());
+	}
+	
+	@Test
+	public void testWrappedSelfReferenceDoesntBlowStack() throws Exception {
+		LEHWrapper wrapper = LEHWrapper.getInstance();
+		SelfReferencingExample sre0 = new SelfReferencingExample();
+		Object wrapped0 = wrapper.wrap(sre0);
+		SelfReferencingExample sre1 = new SelfReferencingExample();
+		Object wrapped1 = wrapper.wrap(sre1);
+		sre0.instance = wrapped0;
+		sre1.instance = wrapped1;
+		assertEquals(wrapped0, wrapped1);
+		assertEquals(wrapped0.hashCode(), wrapped1.hashCode());
+		assertEquals(wrapped0.toString(), wrapped1.toString());
+		assertEquals(
+				"SelfReferencingExample=["
+				+ "ids={instance=SelfReferencingExample=[" 	// sr0
+				+ "ids={instance=parentReference#"			// already evaluated 
+				+ wrapped0.hashCode()+ "}]}]",				// uses hashcode instead of infinite recursion 
+			 wrapped0.toString());
+	}
+	
+	@Test
+	public void testWrappedCrossReferenceDoesntBlowStack() throws Exception {
+		LEHWrapper wrapper = LEHWrapper.getInstance();
+		SelfReferencingExample sre0 = new SelfReferencingExample();
+		Object wrapped0 = wrapper.wrap(sre0);
+		SelfReferencingExample sre1 = new SelfReferencingExample();
+		Object wrapped1 = wrapper.wrap(sre1);
+		sre0.instance = wrapped1;
+		sre1.instance = wrapped0;
+		assertEquals(wrapped0, wrapped1);
+		assertEquals(wrapped0.hashCode(), wrapped1.hashCode());
+		assertEquals(wrapped0.toString(), wrapped1.toString());
+		assertEquals(
+				"SelfReferencingExample=["
+						+ "ids={instance=SelfReferencingExample=[" // sre1
+						+ "ids={instance=SelfReferencingExample=[" // sre0
+						+ "ids={instance=parentReference#"		   // already evaluated sre0
+						+ wrapped1.hashCode() + "}]}]}]",		   // uses hashcode instead of infinite recursion 
+					wrapped0.toString());
 	}
 	
 }

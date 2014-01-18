@@ -166,8 +166,9 @@ public class LEH implements LEHDelegate {
 			return getMapEquals(instance1, instance2, fields, evaluated);
 		}
 		if(isEntity){
-			if(evaluated.contains(instance1)){
-				return true;
+			if(isAlreadyEvaluated(instance1, evaluated)){
+				return instance1 == instance2 || 
+						getHashCode(instance1) == getHashCode(instance2);
 			}
 			evaluated.add(instance1);
 			Class<?> class1 = resolveClass(instance1);
@@ -188,6 +189,25 @@ public class LEH implements LEHDelegate {
 			return true;
 		}
 		return false;
+	}
+
+	private boolean isAlreadyEvaluated(Object instance1, List<Object> evaluated) {
+		for(Object o : evaluated){
+			if(instance1 == o){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public Map<String, Object> getIdentity(Object instance) {
+		return getValueByFieldName(instance, identities);
+	}
+
+	private Map<String, Object> getValueByFieldName(Object instance, 
+			Map<Class<?>, List<Field>> fields) {
+		return getValueByFieldName(instance,
+				getFields(fields, instance.getClass(), isEntity(instance)));
 	}
 
 	/**
@@ -324,8 +344,8 @@ public class LEH implements LEHDelegate {
 	 */
 	private int getHashCode(Object instance, List<Object> evaluated, boolean isEntity) {
 		if(instance != null){
-			if(evaluated.contains(instance)){
-				return 39;
+			if(isAlreadyEvaluated(instance, evaluated)){
+				return resolveClass(instance).hashCode();
 			}
 			evaluated.add(instance);
 			if(isEntity){
@@ -404,8 +424,8 @@ public class LEH implements LEHDelegate {
 	private String getToString(Object instance, boolean isEntity, List<Object> evaluated) {
 		String toString;
 		if(isEntity){
-			if(evaluated.contains(instance)){
-				toString = "this";
+			if(isAlreadyEvaluated(instance, evaluated)){
+				toString = "parentReference#"+getHashCode(resolveInstance(instance), isEntity);
 			}else{
 				evaluated.add(instance);
 				Class<?> instanceClass = resolveClass(instance);
@@ -419,10 +439,12 @@ public class LEH implements LEHDelegate {
 				}
 				toString = tempClass.getSimpleName() + (tempClass == instanceClass ? "" : ("$1"))  + "=[";
 				String seperator = ", ";
-				List<Field> fields = getFields(identities, instanceClass, isEntity);
-				String idsString = getToString("ids={", instance, seperator, fields, "}", evaluated);
+				List<Field> idFields = getFields(identities, instanceClass, isEntity);
+				String idsString = getToString("ids={", instance, seperator, idFields, "}", evaluated);
 				toString += idsString;
-				fields = getFields(equalsHashCodeFields, instanceClass, isEntity);
+				List<Field> equalsFields = getFields(equalsHashCodeFields, instanceClass, isEntity);
+				List<Field> fields = new ArrayList<Field>(equalsFields);
+				fields.removeAll(idFields);
 				if(fields.size() > 0){
 					if(idsString.length() > 0){
 						toString += seperator;
@@ -449,13 +471,11 @@ public class LEH implements LEHDelegate {
 	private String getToString(Object instance, String seperator, List<Field> fields, List<Object> evaluated) {
 		Iterator<Entry<String, String>> valueByFieldNameIterator = map(instance, fields, seperator, evaluated).entrySet().iterator();
 		String toString = "";
-		if(valueByFieldNameIterator.hasNext()){
-			while(valueByFieldNameIterator.hasNext()){
-				Entry<String, String> valueByFieldName = valueByFieldNameIterator.next();
-				toString += valueByFieldName.getKey() + "=" + valueByFieldName.getValue();
-				if(valueByFieldNameIterator.hasNext()){
-					toString += seperator;
-				}
+		while(valueByFieldNameIterator.hasNext()){
+			Entry<String, String> valueByFieldName = valueByFieldNameIterator.next();
+			toString += valueByFieldName.getKey() + "=" + valueByFieldName.getValue();
+			if(valueByFieldNameIterator.hasNext()){
+				toString += seperator;
 			}
 		}
 		return toString;
@@ -497,7 +517,7 @@ public class LEH implements LEHDelegate {
 		for(Entry<String, Object> fieldNameAndValue : values.entrySet()){
 			String fieldName = fieldNameAndValue.getKey();
 			Object value = fieldNameAndValue.getValue();
-			if(value != null){
+			if(value != null){ 
 				if(value instanceof Iterable<?>){
 					if(value instanceof List<?> && ((List<?>)value).size() > 0){
 						map.put(fieldName, getToCollectionString("[", (List<?>)value, "]", seperator, evaluated));
@@ -667,7 +687,8 @@ public class LEH implements LEHDelegate {
 						Identity identity = f.getAnnotation(Identity.class);
 						if(!f.isAnnotationPresent(Transient.class) && (identity == null || identity.value())){
 							equalsFields.add(f);
-						}else{
+						}
+						if(identity != null){
 							identityFields.add(f);
 						}
 					}

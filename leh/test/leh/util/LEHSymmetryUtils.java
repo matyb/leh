@@ -4,6 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Verifies that equals, hashCode and toString are implemented symmetrically.
  * Once exception - toString() contains @Identity fields, whereas equals and hashcode
@@ -12,6 +15,14 @@ import static org.junit.Assert.assertTrue;
  */
 public class LEHSymmetryUtils {
 
+	/**
+	 * Both the LEH singleton instance and Wrapper proxy are tested
+	 * for parity and cohesion. Testing for additional LEHDelegates
+	 * can be accomplished by adding them to this list.
+	 */
+	private static final List<LEHDelegate> lehInstances = Arrays.asList(
+			LEH.getInstance(), LEHWrapperDelegate.getInstance());
+	
 	/**
 	 * Verifies that equals, hashCode and toString are implemented
 	 * symmetrically. Once exception - toString() contains @Identity fields,
@@ -29,10 +40,9 @@ public class LEHSymmetryUtils {
 	 */
 	public static void verify(Object instance1, Object instance2,
 			boolean isEqual, String...toStrings) throws Exception {
-		verify(instance1, instance2, isEqual,
-			LEH.getInstance(), toStrings);
-		verify(instance1, instance2, isEqual,
-			LEHWrapperDelegate.getInstance(), toStrings);
+		for(LEHDelegate delegate : lehInstances){
+			verify(instance1, instance2, isEqual, delegate, toStrings);
+		}
 	}
 	
 	/**
