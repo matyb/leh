@@ -29,6 +29,10 @@ leh.util.annotations.Identity
 ```  
 A field level annotation indicating a compliment or component of equality. Fields annotated with ```@Identity``` are intended to indicate primary keys. _By default_ fields annotated with this type are _not evaluated in equals or hashCode_. To include these fields annotate with the true value ```@Identity(true)``` to indicate the field does participate in equality/hashCode evaluation.
 ```
+leh.util.annotations.Transient
+```  
+A field level annotation indicating a field is not to be considered part of the object's identity nor its equals, hashcode or toString methods. Typically good candidates for this annotation are volatile fields mutated as part of a computationally expensive method invocation that can derive the value from other persisted or significant fields.
+```
 leh.util.LEH
 ```  
 Provides Object equals/hashCode/toString equivalents in a generic, reflective and reusable form. Reflectively accesses fields of LEHAware instances for equals/hashCode/toString determinations. Instances discovered in evaluation that do not implement LEHAware are merely evaluated per their implementation of equals/hashCode/toString.
