@@ -14,6 +14,8 @@ import leh.example.Meh;
 import leh.example.SelfReferencingExample;
 import leh.util.LEHMethodHandlers;
 import leh.util.ReflectionUtils;
+import leh.util.wrapper.LEHWrapper;
+import leh.util.wrapper.MethodHandler;
 
 import org.junit.Test;
 
@@ -22,12 +24,10 @@ public class LEHWrapperTest {
 	@Test
 	public void testWrapHandlerAssociation() throws Exception {
 		Meh meh = new Meh(){
-			@Override
 			public Object meh(String arg) {
 				fail();
 				return null;
 			}
-			@Override
 			public Object heh() {
 				return "OK Bai";
 			}

@@ -1,8 +1,9 @@
-package leh.util.wrappers;
+package leh.util.wrapper;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,26 +30,47 @@ public class LEHWrapper {
 	/**
 	 * List of method handlers that LEH supports (equals, hashCode, toString).
 	 */
-	private final List<MethodHandler> methodHandlers;
+	private final List<MethodHandler> methodHandlers;	
 	
-	private LEHWrapper(){
-		this(LEHMethodHandlers.ALL_LEH_METHODS);
-	}
-	
-	/**
-	 * Made inaccessible, this is a singleton.
-	 * @param methodHandlers
-	 */
-	private LEHWrapper(List<MethodHandler> methodHandlers) {
-		this.methodHandlers = methodHandlers;
-	}
-
 	/**
 	 * Returns singleton instance of LEHWrapper.
 	 * @return
 	 */
 	public static LEHWrapper getInstance(){
 		return instance;
+	}
+	
+	/**
+	 * Syntactic sugar for wrap method. Merely invokes wrap on the provided
+	 * instance with the singleton instance backing this class.
+	 * 
+	 * @param object
+	 * @return
+	 */
+	public static LEHAware getInstance(Object object) {
+		return instance.wrap(object);
+	}
+	
+	/**
+	 * Syntactic sugar for wrap method. Merely invokes wrap on the provided
+	 * instances with the singleton instance backing this class.
+	 * 
+	 * @param object
+	 * @return
+	 */
+	public static List<LEHAware> getInstance(Collection<Object> objects) {
+		return instance.wrap(objects);
+	}
+	
+	/**
+	 * Produces a new LEHWrapper aware of the provided method handlers as
+	 * opposed to the default equals, hashcode, and tostring methods.
+	 * 
+	 * @param methodHandlers
+	 * @return
+	 */
+	public static LEHWrapper getInstance(MethodHandler... methodHandlers) {
+		return new LEHWrapper(Arrays.asList(methodHandlers));
 	}
 	
 	/**
@@ -83,7 +105,7 @@ public class LEHWrapper {
 	 * @param instances
 	 * @return
 	 */
-	public List<LEHAware> wrap(List<Object> instances) {
+	public List<LEHAware> wrap(Collection<Object> instances) {
 		return wrap(instances, methodHandlers);
 	}
 	
@@ -96,7 +118,7 @@ public class LEHWrapper {
 	 * @param instances
 	 * @return
 	 */
-	public List<LEHAware> wrap(List<Object> instances, List<MethodHandler> handlers) {
+	public List<LEHAware> wrap(Collection<Object> instances, List<MethodHandler> handlers) {
 		List<LEHAware> entities = new ArrayList<LEHAware>(instances.size());
 		for(Object instance : instances){
 			entities.add(wrap(instance, handlers));
@@ -149,7 +171,8 @@ public class LEHWrapper {
 		if(ifaces.length != interfaces.size()){
 			ifaces = interfaces.toArray(new Class[interfaces.size()]);
 		}
-		return (T)Proxy.newProxyInstance(instance.getClass().getClassLoader(), ifaces, new LEHInvocationHandler(instance, handlers));
+		return (T)Proxy.newProxyInstance(getClass().getClassLoader(), 
+				ifaces, new LEHInvocationHandler(instance, handlers));
 	}
 
 	/**
@@ -165,7 +188,7 @@ public class LEHWrapper {
 	 * @param ifaces
 	 * @return
 	 */
-	public List<LEHAware> wrap(List<Object> instances, Class<?>...ifaces) {
+	public List<LEHAware> wrap(Collection<Object> instances, Class<?>...ifaces) {
 		return wrap(instances, methodHandlers, ifaces);
 	}
 	
@@ -182,7 +205,7 @@ public class LEHWrapper {
 	 * @param ifaces
 	 * @return
 	 */
-	public List<LEHAware> wrap(List<Object> instances, List<MethodHandler> handlers, Class<?>...ifaces) {
+	public List<LEHAware> wrap(Collection<Object> instances, List<MethodHandler> handlers, Class<?>...ifaces) {
 		List<LEHAware> entities = new ArrayList<LEHAware>(instances.size());
 		for(Object instance : instances){
 			entities.add(wrap(instance, handlers, LEHAware.class, ifaces));
@@ -203,12 +226,27 @@ public class LEHWrapper {
 	 * @param ifaces
 	 * @return
 	 */
-	public <T> List<T> wrap(List<Object> instances, List<MethodHandler> handlers, Class<T> referencedInterfaceType, Class<?>...ifaces) {
+	public <T> List<T> wrap(Collection<Object> instances, List<MethodHandler> handlers, Class<T> referencedInterfaceType, Class<?>...ifaces) {
 		List<T> entities = new ArrayList<T>(instances.size());
 		for(Object instance : instances){
 			entities.add(wrap(instance, handlers, referencedInterfaceType, ifaces));
 		}
 		return entities;
+	}
+
+	/**
+	 * Made inaccessible, this is a singleton or produced by factory.
+	 * @param methodHandlers
+	 */
+	private LEHWrapper(List<MethodHandler> methodHandlers) {
+		this.methodHandlers = methodHandlers;
+	}
+	
+	/**
+	 * Made inaccessible, solely used for singleton.
+	 */
+	private LEHWrapper(){
+		this(LEHMethodHandlers.ALL_LEH_METHODS);
 	}
 	
 }

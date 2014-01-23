@@ -1,4 +1,4 @@
-package leh.util.wrappers;
+package leh.util.wrapper;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -56,7 +56,6 @@ public class LEHInvocationHandler implements InvocationHandler {
 	 * supplied handlers, or passes along the invocation to the wrapped object
 	 * if no handler is found.
 	 */
-	@Override
 	public Object invoke(Object arg0, Method arg1, Object[] arg2) throws Throwable {
 		MethodHandler handler = handlers.get(arg1.getName());
 		Object result;

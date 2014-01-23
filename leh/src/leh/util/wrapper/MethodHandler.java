@@ -1,4 +1,4 @@
-package leh.util.wrappers;
+package leh.util.wrapper;
 
 /**
  * A method implementation used by LEHInvocationHandler. Maps the name and
@@ -24,7 +24,7 @@ public abstract class MethodHandler {
 	 * 
 	 * @param name
 	 * @param argumentTypes
-	 * @see leh.util.wrappers.LEHInvocationHandler
+	 * @see leh.util.wrapper.LEHInvocationHandler
 	 */
 	public MethodHandler(String name, Class<?>[] argumentTypes){
 		this.name = name;

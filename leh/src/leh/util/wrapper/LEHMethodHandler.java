@@ -1,4 +1,4 @@
-package leh.util.wrappers;
+package leh.util.wrapper;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;

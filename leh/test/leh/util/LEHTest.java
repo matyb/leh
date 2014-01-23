@@ -12,7 +12,7 @@ import leh.example.food.Food.FoodType;
 import leh.example.food.FoodInventory;
 import leh.example.person.Employee;
 import leh.example.person.Person;
-import leh.util.wrappers.LEHWrapper;
+import leh.util.wrapper.LEHWrapper;
 
 import org.junit.Test;
 

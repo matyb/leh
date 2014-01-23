@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import leh.util.wrappers.LEHMethodHandler;
-import leh.util.wrappers.MethodHandler;
+import leh.util.wrapper.LEHMethodHandler;
+import leh.util.wrapper.MethodHandler;
 
 /**
  * The constants for MethodHandler implementations LEH supports.

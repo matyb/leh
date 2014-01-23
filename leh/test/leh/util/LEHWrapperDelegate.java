@@ -1,6 +1,6 @@
 package leh.util;
 
-import leh.util.wrappers.LEHWrapper;
+import leh.util.wrapper.LEHWrapper;
 
 /**
  * 
@@ -24,7 +24,6 @@ public class LEHWrapperDelegate implements LEHDelegate {
 		return instance;
 	}
 	
-	@Override
 	public boolean isEqual(Object instance1, Object instance2) {
 		instance1 = instance1 == null ? null : wrapper.wrap(instance1);
 		instance2 = instance2 == null ? null : wrapper.wrap(instance2);
@@ -32,12 +31,10 @@ public class LEHWrapperDelegate implements LEHDelegate {
 				instance2.equals(instance1) : instance1.equals(instance2);
 	}
 	
-	@Override
 	public String getToString(Object instance) {
 		return "" + wrapper.wrap(instance);
 	}
 	
-	@Override
 	public int getHashCode(Object instance) {
 		return wrapper.wrap(instance).hashCode();
 	}

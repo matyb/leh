@@ -9,7 +9,7 @@ import leh.example.food.Food;
 import leh.example.food.Food.FoodType;
 import leh.example.person.Employee;
 import leh.example.person.Person;
-import leh.util.wrappers.LEHWrapper;
+import leh.util.wrapper.LEHWrapper;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -33,17 +33,17 @@ public class LEHCachingPerformanceTest {
 	 * last count: on an i5 4670K 16GB of DDR3 and SSD in Win 8 w/ JDK 1.7.0.45.
 	 * 
  	 * 
-	 * LEH Proxy Methods: took: 1561ms:
-	 * class com.sun.proxy.$Proxy4.toString() took: 977ms 
-	 * class com.sun.proxy.$Proxy4.equals(samePersonButDifferentInstance) took: 295ms
-	 * class com.sun.proxy.$Proxy4.equals(instance1.getSpouse()) took: 23ms
-	 * class com.sun.proxy.$Proxy4.hashCode() took: 259ms 
-	 *  
-	 * LEH Equivalent java.lang.Object methods: took: 1119ms 
-	 * class leh.util.LEH.getToString(person1) took: 693ms 
-	 * class leh.util.LEH.isEqual(instance1, instance2) took: 199ms 
-	 * class leh.util.LEH.isEqual(instance1, instance1.getSpouse()) took: 10ms 
-	 * class leh.util.LEH.getHashCode(instance1) took: 217ms
+	 * took: 425ms. for:   *Executing publicly exposed APIs 1000 times.
+	 * took: 133ms. for:     =LEH Equivalent java.lang.Object methods:
+	 * took: 27ms. for:        -class leh.util.LEH.getHashCode(instance1)
+	 * took: 2ms. for:         -class leh.util.LEH.isEqual(instance1, instance1.getSpouse())
+	 * took: 43ms. for:        -class leh.util.LEH.isEqual(instance1, instance2)
+	 * took: 60ms. for:        -class leh.util.LEH.getToString(person1)
+	 * took: 288ms. for:     =LEH Proxy Methods:
+	 * took: 40ms. for:        -class com.sun.proxy.$Proxy5.hashCode()
+	 * took: 3ms. for:         -class com.sun.proxy.$Proxy5.equals(instance1.getSpouse())
+	 * took: 53ms. for:        -class com.sun.proxy.$Proxy5.equals(samePersonButDifferentInstance)
+	 * took: 173ms. for:       -class com.sun.proxy.$Proxy5.toString()
 	 * 
 	 * @throws Exception
 	 */
@@ -54,18 +54,15 @@ public class LEHCachingPerformanceTest {
 
 	private void executePubliclyExposedLEHMethods(final int runs) {
 		time(1, "*Executing publicly exposed APIs " + runs + " times.", new Runnable(){
-			@Override
 			public void run() {
 				final Employee instance1 = createEmployee();
 				final Employee instance2 = createEmployee();
 				time(1, "  =LEH Proxy Methods:", new Runnable(){
-					@Override
 					public void run() {
 						executeObjectMethodsOnWrapper(runs, instance1, instance2);
 					}
 				});
 				time(1, "  =LEH Equivalent java.lang.Object methods:", new Runnable() {
-					@Override
 					public void run() {
 						executePubliclyExposedLEHMethods(runs, instance1, instance2);
 					}
@@ -81,25 +78,21 @@ public class LEHCachingPerformanceTest {
 		final LEH leh = LEH.getInstance();
 		String testNamePrefix = "    -" + leh.getClass() + ".";
 		time(runs, testNamePrefix + "getToString(person1)", new Runnable() {
-			@Override
 			public void run() {
 				leh.getToString(instance1);
 			}
 		});
 		time(runs, testNamePrefix + "isEqual(instance1, instance2)", new Runnable() {
-			@Override
 			public void run() {
 				leh.isEqual(instance1, instance2);
 			}
 		});
 		time(runs, testNamePrefix + "isEqual(instance1, instance1.getSpouse())", new Runnable() {
-			@Override
 			public void run() {
 				leh.isEqual(instance1, instance1.getSpouse());
 			}
 		});
 		time(runs, testNamePrefix + "getHashCode(instance1)", new Runnable() {
-			@Override
 			public void run() {
 				leh.getHashCode(instance1);
 			}
@@ -112,25 +105,21 @@ public class LEHCachingPerformanceTest {
 		final Object samePersonDifferentInstance = wrapper.wrap(instance2);
 		String testNamePrefix = "    -" + person.getClass();
 		time(runs, testNamePrefix + ".toString()", new Runnable() {
-			@Override
 			public void run() {
 				person.toString();
 			}
 		});
 		time(runs, testNamePrefix + ".equals(samePersonButDifferentInstance)", new Runnable() {
-			@Override
 			public void run() {
 				person.equals(samePersonDifferentInstance);
 			}
 		});
 		time(runs, testNamePrefix + ".equals(instance1.getSpouse())", new Runnable() {
-			@Override
 			public void run() {
 				person.equals(instance1.getSpouse());
 			}
 		});
 		time(runs, testNamePrefix + ".hashCode()", new Runnable() {
-			@Override
 			public void run() {
 				person.hashCode();
 			}

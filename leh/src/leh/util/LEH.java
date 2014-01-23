@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import leh.annotations.Identity;
 import leh.annotations.Transient;
-import leh.util.wrappers.LEHMethodHandler;
+import leh.util.wrapper.LEHMethodHandler;
 
 /**
  * A utility class that operates on Entity instances or on the presumption of an
@@ -40,7 +40,6 @@ public class LEH implements LEHDelegate {
 	 * ToString adapter for Map.entrySet
 	 */
 	private final ToStringFunction mapToStringFunction = new ToStringFunction() {
-		@Override
 		public String toString(Object o, List<Object> evaluated) {
 			Entry<?, ?> entry = (Entry<?, ?>)o;
 			return getToString((Object)entry.getKey(), evaluated) + "=" + getToString(entry.getValue(), evaluated);
@@ -51,7 +50,6 @@ public class LEH implements LEHDelegate {
 	 * ToString adapter for Object
 	 */
 	private final ToStringFunction iterableToStringFunction = new ToStringFunction() {
-		@Override
 		public String toString(Object o, List<Object> evaluated) {
 			return getToString(o, evaluated);
 		}
@@ -213,7 +211,7 @@ public class LEH implements LEHDelegate {
 	/**
 	 * Returns the passed in instance's class if it is not a proxy class. In the
 	 * event the argument is of a proxy type, the wrapped type is returned
-	 * instead.
+	 * instead until a non-proxy instance is discovered.
 	 * 
 	 * @param instance
 	 * @return
