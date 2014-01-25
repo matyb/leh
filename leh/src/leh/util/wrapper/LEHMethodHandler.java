@@ -9,6 +9,8 @@ import java.lang.reflect.Proxy;
  */
 public abstract class LEHMethodHandler extends MethodHandler{
 
+	private static final long serialVersionUID = 221057597747859063L;
+
 	public LEHMethodHandler(String name, Class<?>[] argumentTypes) {
 		super(name, argumentTypes);
 	}

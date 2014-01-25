@@ -21,6 +21,7 @@ public class LEHMethodHandlers extends ArrayList<MethodHandler>{
 	 * @see wrap(Object instance, List<MethodHandler> methodHandlers)
 	 */
 	public final static MethodHandler EQUALS = new LEHMethodHandler("equals", new Class[]{Object.class}) {
+		private static final long serialVersionUID = -8471547281850970478L;
 		@Override
 		public Object invokeOnUnwrappedLEHProxyInstances(Object instance, Object... args) {
 			return LEH.getInstance().isEqual(instance, args[0], true);
@@ -33,6 +34,7 @@ public class LEHMethodHandlers extends ArrayList<MethodHandler>{
 	 * @see wrap(Object instance, List<MethodHandler> methodHandlers)
 	 */
 	public final static MethodHandler HASHCODE = new LEHMethodHandler("hashCode", new Class[0]) {
+		private static final long serialVersionUID = -6797737598996956214L;
 		@Override
 		public Object invokeOnUnwrappedLEHProxyInstances(Object instance, Object... args) {
 			return LEH.getInstance().getHashCode(instance, true);
@@ -45,6 +47,7 @@ public class LEHMethodHandlers extends ArrayList<MethodHandler>{
 	 * @see wrap(Object instance, List<MethodHandler> methodHandlers)
 	 */
 	public final static MethodHandler TOSTRING = new LEHMethodHandler("toString", new Class[0]) {
+		private static final long serialVersionUID = 5812630837074351932L;
 		@Override
 		public Object invokeOnUnwrappedLEHProxyInstances(Object instance, Object... args) {
 			return LEH.getInstance().getToString(instance, true);

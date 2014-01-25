@@ -1,5 +1,6 @@
 package leh.util.wrapper;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -13,8 +14,10 @@ import java.util.Map;
  * methods supplied at construction time, or pass along the invocation to 
  * the wrapped instance if no such MethodHandler is found.
  */
-public class LEHInvocationHandler implements InvocationHandler {
+public class LEHInvocationHandler implements InvocationHandler, Serializable {
 	
+	private static final long serialVersionUID = -529912911387072643L;
+
 	/**
 	 * The instance to dispatch calls to.
 	 */

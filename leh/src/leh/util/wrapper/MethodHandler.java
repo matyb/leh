@@ -1,11 +1,15 @@
 package leh.util.wrapper;
 
+import java.io.Serializable;
+
 /**
  * A method implementation used by LEHInvocationHandler. Maps the name and
  * argument types to a method. Provides plumbing to logic by which to override a
  * matching method invocation at runtime.
  */
-public abstract class MethodHandler {
+public abstract class MethodHandler implements Serializable {
+
+	private static final long serialVersionUID = -5896198214733158641L;
 
 	/**
 	 * The name of the method to intercept calls to.
