@@ -21,7 +21,7 @@ public abstract class LEHMethodHandler extends MethodHandler{
 	 * @param args
 	 */
 	@Override
-	public Object invoke(Object instance, Object... args) {
+	public Object invoke(Object instance, String methodName, Object... args) {
 		return invokeOnUnwrappedLEHProxyInstances(unwrapLEHProxy(instance), unwrapLEHProxies(args));
 	}
 	

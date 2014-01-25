@@ -62,7 +62,7 @@ public class LEHInvocationHandler implements InvocationHandler {
 		if (handler != null
 				&& ((arg2 == null && handler.getArgumentTypes().length == 0) || 
 					(arg2 != null && Arrays.equals(handler.getArgumentTypes(), arg1.getParameterTypes())))){
-			result = handler.invoke(wrappedInstance, arg2);
+			result = handler.invoke(wrappedInstance, arg1.getName(), arg2);
 		}else{
 			result = arg1.invoke(wrappedInstance, arg2);
 		}

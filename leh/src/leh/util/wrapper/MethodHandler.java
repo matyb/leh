@@ -37,7 +37,7 @@ public abstract class MethodHandler {
 	 * @param args
 	 * @return
 	 */
-	public abstract Object invoke(Object instance, Object...args);
+	public abstract Object invoke(Object instance, String methodName, Object...args);
 	
 	/**
 	 * The name of the method to intercept calls to.

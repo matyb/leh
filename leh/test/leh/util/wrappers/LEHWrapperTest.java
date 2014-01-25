@@ -33,7 +33,7 @@ public class LEHWrapperTest {
 			}
 		};
 		Meh wrappedMeh = LEHWrapper.getInstance().wrap(meh, Arrays.asList((MethodHandler)new MethodHandler("meh", new Class[]{String.class}){
-			public Object invoke(Object instance, Object... args){
+			public Object invoke(Object instance, String methodName, Object... args){
 				return Arrays.asList(instance, Arrays.asList(args));
 			}
 		}), Meh.class);
@@ -52,13 +52,13 @@ public class LEHWrapperTest {
 		};
 		List<MethodHandler> handlers = new ArrayList<MethodHandler>(LEHMethodHandlers.ALL_LEH_METHODS);
 		handlers.add(new MethodHandler("meh", new Class[]{String.class}) {
-			public Object invoke(Object instance, Object... args) {
+			public Object invoke(Object instance, String methodName, Object... args) {
 				assertEquals(meh1, instance);
 				return "Hai " + args[0];
 			}
 		});
 		handlers.add(new MethodHandler("heh", new Class[0]) {
-			public Object invoke(Object instance, Object... args) {
+			public Object invoke(Object instance, String methodName, Object... args) {
 				assertEquals(meh1, instance);
 				return "OK Bai";
 			}
