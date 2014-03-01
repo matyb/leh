@@ -40,7 +40,7 @@ Produces Wrapper instances that dispatch equals, hashCode, and toString to metho
 Usage
 -----
 
-Take a new or existing class and implement leh.util.LEHAware. This indicates instances of that type are eligible for evaluation by leh.util.LEH. A wrapped instance from leh.util.LEHWrapper will be made to implement LEHAware (which makes it eligible for evaluation by leh.util.LEH) and will intercept calls to equals/hashCode/toString and direct them to LEH for evaluation.
+Take a new or existing class and implement leh.util.LEHAware. This indicates instances of that type are eligible for evaluation by leh.util.LEH. A wrapped instance from leh.util.LEH will be behave as though it implements LEHAware (which makes it eligible for evaluation by leh.util.LEH) and will intercept calls to equals/hashCode/toString and direct them to LEH for evaluation.
 
 Get a reference to LEH singleton:
 ```LEHDelegate leh = LEH.getInstance();```  
