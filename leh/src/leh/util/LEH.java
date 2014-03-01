@@ -740,8 +740,10 @@ public class LEH {
 		
 		/**
 		 * Returns true if instance supplied as argument is of a type that
-		 * implements Entity or is a class that is equal to or a subtype of Entity.
+		 * implements LEHAware is of the type Wrapper.
 		 * 
+		 * @see leh.util.LEHAware
+		 * @see leh.util.Wrapper
 		 * @param instance
 		 * @return
 		 */
