@@ -26,7 +26,9 @@ public class LEH {
 	private static Map<Long, LEHDelegate> delegateByThread = new ConcurrentHashMap<Long, LEHDelegate>(); 
 	
 	/**
-	 * Returns a referentially transparent (but immutable) version of the singleton.
+	 * Returns a thread confined, referentially transparent, and immutable
+	 * version of the singleton.
+	 * 
 	 * @return
 	 */
 	public static synchronized LEHDelegate getInstance(){
@@ -39,6 +41,15 @@ public class LEH {
 		return delegate;
 	}
 
+	/**
+	 * Syntactic sugar replacing getInstance().getInstance(Object instance) calls.
+	 * 
+	 * Returns thread confined singleton's evaluation of the supplied instance via
+	 * invocation of its getInstance(instance) method.
+	 * 
+	 * @param value
+	 * @return
+	 */
 	public static synchronized Wrapper getInstance(final Object value) {
 		return getInstance().getInstance(value);
 	}
@@ -49,7 +60,7 @@ public class LEH {
 		 * class. Acts as local cache mitigating performance hit associated with
 		 * repetitive reflective discovery.
 		 */
-		private final Map<Class<?>, List<Field>> identityFields;
+		final Map<Class<?>, List<Field>> identityFields;
 		
 		/**
 		 * List of equality/hashcode eligible fields as discovered via reflection,
@@ -59,12 +70,12 @@ public class LEH {
 		 * @see leh.annotations.Identity for definition of equality/hashcode
 		 *      eligibility.
 		 */
-		private final Map<Class<?>, List<Field>> equalsHashCodeFields;
+		final Map<Class<?>, List<Field>> equalsHashCodeFields;
 		
 		/**
 		 * ToString adapter for Map.entrySet
 		 */
-		private final ToStringFunction mapToStringFunction = new ToStringFunction() {
+		final ToStringFunction mapToStringFunction = new ToStringFunction() {
 			public String toString(Object o, List<Object> evaluated) {
 				Entry<?, ?> entry = (Entry<?, ?>)o;
 				return getToString((Object)entry.getKey(), evaluated) + "=" + getToString(entry.getValue(), evaluated);
@@ -74,7 +85,7 @@ public class LEH {
 		/**
 		 * ToString adapter for Object
 		 */
-		private final ToStringFunction iterableToStringFunction = new ToStringFunction() {
+		final ToStringFunction iterableToStringFunction = new ToStringFunction() {
 			public String toString(Object o, List<Object> evaluated) {
 				return getToString(o, evaluated);
 			}
@@ -83,7 +94,7 @@ public class LEH {
 		/**
 		 * Constructor used internally for mutable reference to singleton instance.
 		 */
-		private LEHInstance(){
+		LEHInstance(){
 			this(new LinkedHashMap<Class<?>, List<Field>>(),
 				 new LinkedHashMap<Class<?>, List<Field>>());
 		}
@@ -96,64 +107,34 @@ public class LEH {
 		 * @param identities
 		 * @param logicallyEqualFields
 		 */
-		private LEHInstance(Map<Class<?>, List<Field>> identities,
+		LEHInstance(Map<Class<?>, List<Field>> identities,
 				Map<Class<?>, List<Field>> logicallyEqualFields) {
 			this.identityFields = identities;
 			this.equalsHashCodeFields = logicallyEqualFields;
 		}
-
-		/**
-		 * @see leh.util.LEHDelegate.isEqual(Object instance1, Object instance2)
-		 */
+		
 		public Object getEquals(final Object instance1) {
 			return getEquals(instance1, isLEHAware(instance1));
 		}
 		
-		/**
-		 * @see leh.util.LEHDelegate.isEqual(Object instance1, Object instance2)
-		 */
-		public Object getEquals(final Object instance1, final boolean isLEHAware) {
-			return new Object() {
+		public Object getHashCode(final Object instance) {
+			return new Object(){
 				@Override
-				public boolean equals(Object instance2) {
-					return isEqual(instance1, instance2, isLEHAware);
+				public int hashCode() {
+					return getHashCode(instance, isLEHAware(instance));
 				}
 			};
 		}
 		
-		private boolean isEqual(Object instance1, Object instance2) {
-			return isEqual(instance1, instance2, isLEHAware(instance1));
+		public Object getToString(final Object instance){
+			return new Object(){
+				@Override
+				public String toString() {
+					return getToString(instance, isLEHAware(instance));
+				}
+			};
 		}
 		
-		/**
-		 * To return true either of the statements: 
-		 *   instance1 == instance2;
-		 *   instance1.equals(instace2); 
-		 * evaluate to true; or if isLEHAware is true, than fields may be 
-		 * tested by reflection for equality. Values found to be of types implementing 
-		 * Entity in reflectively testing for equality enter the same test.
-		 * 
-		 * @see leh.util.LEHAware
-		 * @see leh.annotations.Identity
-		 * @see leh.annotations.Transient
-		 * @param instance1
-		 * @param instance2
-		 * @param isLEHAware
-		 * @return
-		 */
-		boolean isEqual(Object instance1, Object instance2, boolean isLEHAware){
-			return areValuesEqual(instance1, instance2, equalsHashCodeFields, new ArrayList<Object>(), isLEHAware);
-		}
-
-		/**
-		 * Returns a Wrapper over the passed in instance which implements
-		 * equals, hashCode, and toString logically on its behalf.
-		 * 
-		 * @see leh.util.LEHAware
-		 * @see leh.annotations.Identity
-		 * @see leh.annotations.Transient
-		 * @param value
-		 */
 		public Wrapper getInstance(final Object value) {
 			return new Wrapper(){
 				
@@ -177,12 +158,59 @@ public class LEH {
 			};
 		}
 		
-		private boolean areValuesEqual(Object instance1, Object instance2,
+		public Map<String, Object> getIdentity(Object instance) {
+			if(instance == null){
+				return Collections.emptyMap();
+			}
+			Map<String, Object> identity = getValueByFieldName(instance, identityFields);
+			for(Entry<String, Object> entry : identity.entrySet()){
+				entry.setValue(LEH.getInstance(entry.getValue()));
+			}
+			return identity;
+		}
+		
+		/**
+		 * @see leh.util.LEHDelegate.isEqual(Object instance1, Object instance2)
+		 */
+		Object getEquals(final Object instance1, final boolean isLEHAware) {
+			return new Object() {
+				@Override
+				public boolean equals(Object instance2) {
+					return isEqual(instance1, instance2, isLEHAware);
+				}
+			};
+		}
+		
+		boolean isEqual(Object instance1, Object instance2) {
+			return isEqual(instance1, instance2, isLEHAware(instance1));
+		}
+		
+		/**
+		 * To return true either of the statements: 
+		 *   instance1 == instance2;
+		 *   instance1.equals(instace2); 
+		 * evaluate to true; or if isLEHAware is true, than fields may be 
+		 * tested by reflection for equality. Values found to be of types implementing 
+		 * Entity in reflectively testing for equality enter the same test.
+		 * 
+		 * @see leh.util.LEHAware
+		 * @see leh.annotations.Identity
+		 * @see leh.annotations.Transient
+		 * @param instance1
+		 * @param instance2
+		 * @param isLEHAware
+		 * @return
+		 */
+		boolean isEqual(Object instance1, Object instance2, boolean isLEHAware){
+			return areValuesEqual(instance1, instance2, equalsHashCodeFields, new ArrayList<Object>(), isLEHAware);
+		}
+		
+		boolean areValuesEqual(Object instance1, Object instance2,
 				Map<Class<?>, List<Field>> fields, List<Object> evaluated) {
 			return areValuesEqual(instance1, instance2, fields, evaluated, isLEHAware(instance1));
 		}
 		
-		private boolean areValuesEqual(Object instance1, Object instance2,
+		boolean areValuesEqual(Object instance1, Object instance2,
 				Map<Class<?>, List<Field>> fields, List<Object> evaluated, boolean isLEHAware) {
 			if(instance1 == instance2){
 				return true;  
@@ -222,7 +250,7 @@ public class LEH {
 			return false;
 		}
 
-		private boolean isAlreadyEvaluated(Object instance1, List<Object> evaluated) {
+		boolean isAlreadyEvaluated(Object instance1, List<Object> evaluated) {
 			for(Object o : evaluated){
 				if(instance1 == o){
 					return true;
@@ -230,49 +258,32 @@ public class LEH {
 			}
 			return false;
 		}
-
-		public Map<String, Object> getIdentity(Object instance) {
-			if(instance == null){
-				return Collections.emptyMap();
-			}
-			Map<String, Object> identity = getValueByFieldName(instance, identityFields);
-			for(Entry<String, Object> entry : identity.entrySet()){
-				entry.setValue(LEH.getInstance(entry.getValue()));
-			}
-			return identity;
-		}
-
-		private Map<String, Object> getValueByFieldName(Object instance, 
-				Map<Class<?>, List<Field>> fields) {
+		
+		Map<String, Object> getValueByFieldName(Object instance, Map<Class<?>, List<Field>> fields) {
 			return getValueByFieldName(instance,
 					getFields(fields, instance.getClass(), isLEHAware(instance)));
 		}
 
 		/**
-		 * Returns the passed in instance's class if it is not a proxy class. In the
-		 * event the argument is of a proxy type, the wrapped type is returned
-		 * instead until a non-proxy instance is discovered.
+		 * Returns the passed in instance's class if it is not a Wrapper. In the
+		 * event the argument is of a Wrapper type, the wrapped type is returned
+		 * instead until an instance not of type Wrapper is discovered.
 		 * 
 		 * @param instance
 		 * @return
 		 */
-		private Class<?> resolveClass(Object instance) {
+		Class<?> resolveClass(Object instance) {
 			return resolveInstance(instance).getClass();
 		}
 
 		/**
-		 * Returns the passed in instance if it is not of a proxy type. In the event
-		 * the argument is of a proxy type, the wrapped type is returned until
-		 * unwrapping yields a wrapped type that has no LEHInvocationHandler.
-		 * 
-		 * Peels wrapper types off instance until underlying wrapped instance is
-		 * found and returned. Supports recursive discovery enabling multiple layers
-		 * of proxys to be unwrapped.
+		 * Unwraps the passed in instance's (if it is of type Wrapper) Wrappers
+		 * until an instance not of type Wrapper is discovered. 
 		 * 
 		 * @param instance
 		 * @return
 		 */
-		private Object resolveInstance(Object instance) {
+		Object resolveInstance(Object instance) {
 			while(instance instanceof Wrapper){
 				instance = ((Wrapper)instance).getWrappedInstance();
 			}
@@ -283,14 +294,14 @@ public class LEH {
 		 * Used in place of Map equality tests in map access. Map equality tests invoke equals, which may not
 		 * represent logical equality. 
 		 * 
-		 * TODO: Make performant. Performance is lousy on large maps.
+		 * TODO: Make performant. Performance is lousy on large and mostly equal maps.
 		 * 
 		 * @param instance1
 		 * @param instance2
 		 * @param fields
 		 * @return
 		 */
-		private boolean getMapEquals(Object instance1, Object instance2, Map<Class<?>, List<Field>> fields, List<Object> evaluated) {
+		boolean getMapEquals(Object instance1, Object instance2, Map<Class<?>, List<Field>> fields, List<Object> evaluated) {
 			if(((Map<?,?>)instance1).size() != ((Map<?,?>)instance2).size()){
 				return false;
 			}
@@ -315,14 +326,14 @@ public class LEH {
 		 * Used in place of Iterable equality tests in collections access. Iterable equality tests invoke equals, which may not
 		 * represent logical equality. 
 		 * 
-		 * TODO: Make performant. Performance is lousy on large collections.
+		 * TODO: Make performant. Performance is lousy on large and mostly equal collections.
 		 * 
 		 * @param instance1
 		 * @param instance2
 		 * @param fields
 		 * @return
 		 */
-		private boolean getIterableEquals(Object instance1, Object instance2, 
+		boolean getIterableEquals(Object instance1, Object instance2, 
 				Map<Class<?>, List<Field>> fields, List<Object> evaluated) {
 			if((instance1 instanceof Collection && instance2 instanceof Collection && 
 					((Collection<?>)instance1).size() != ((Collection<?>)instance2).size()) ||
@@ -344,18 +355,6 @@ public class LEH {
 			}
 			return true;
 		}
-
-		/**
-		 * @see leh.util.LEHDelegate.getHashCode()
-		 */
-		public Object getHashCode(final Object instance) {
-			return new Object(){
-				@Override
-				public int hashCode() {
-					return getHashCode(instance, isLEHAware(instance));
-				}
-			};
-		}
 		
 		/**
 		 * Reflectively access fields and accumulate hashcode values as implemented
@@ -365,7 +364,7 @@ public class LEH {
 		 * @param evaluated
 		 * @return
 		 */
-		private int getHashCode(Object instance, List<Object> evaluated){
+		int getHashCode(Object instance, List<Object> evaluated){
 			return getHashCode(instance, evaluated, isLEHAware(instance));
 		}
 		
@@ -388,7 +387,7 @@ public class LEH {
 		 * @param arrayList memory
 		 * @return
 		 */
-		private int getHashCode(Object instance, List<Object> evaluated, boolean isLEHAware) {
+		int getHashCode(Object instance, List<Object> evaluated, boolean isLEHAware) {
 			if(instance != null){
 				if(isAlreadyEvaluated(instance, evaluated)){
 					return resolveClass(instance).hashCode();
@@ -422,18 +421,6 @@ public class LEH {
 			}
 			return instance == null ? 0 : instance.hashCode();
 		}
-
-		/**
-		 * @see leh.util.LEHDelegate.getToString()
-		 */
-		public Object getToString(final Object instance){
-			return new Object(){
-				@Override
-				public String toString() {
-					return getToString(instance, isLEHAware(instance));
-				}
-			};
-		}
 		
 		/**
 		 * Reflectively access fields and accumulate toString values as implemented
@@ -459,7 +446,7 @@ public class LEH {
 		 * @param arrayList
 		 * @return
 		 */
-		private String getToString(Object instance, List<Object> evaluated) {
+		String getToString(Object instance, List<Object> evaluated) {
 			return getToString(instance, isLEHAware(instance), evaluated);
 		}
 		
@@ -472,7 +459,7 @@ public class LEH {
 		 * @param arrayList
 		 * @return
 		 */
-		private String getToString(Object instance, boolean isLEHAware, List<Object> evaluated) {
+		String getToString(Object instance, boolean isLEHAware, List<Object> evaluated) {
 			String toString;
 			if(isLEHAware && instance != null ){
 				if(isAlreadyEvaluated(instance, evaluated)){
@@ -519,7 +506,7 @@ public class LEH {
 		 * @param fields
 		 * @return
 		 */
-		private String getToString(Object instance, String seperator, List<Field> fields, List<Object> evaluated) {
+		String getToString(Object instance, String seperator, List<Field> fields, List<Object> evaluated) {
 			Iterator<Entry<String, String>> valueByFieldNameIterator = map(instance, fields, seperator, evaluated).entrySet().iterator();
 			String toString = "";
 			while(valueByFieldNameIterator.hasNext()){
@@ -546,7 +533,7 @@ public class LEH {
 		 * @param evaluated
 		 * @return
 		 */
-		private String getToString(String prepend, Object instance, String seperator, List<Field> fields, String append, List<Object> evaluated) {
+		String getToString(String prepend, Object instance, String seperator, List<Field> fields, String append, List<Object> evaluated) {
 			String toString = getToString(instance, seperator, fields, evaluated);
 			return toString.length() > 0 ? prepend + toString + append : toString;
 		}
@@ -562,7 +549,7 @@ public class LEH {
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")
-		private Map<String, String> map(Object instance, List<Field> fields, String seperator, List<Object> evaluated) {
+		Map<String, String> map(Object instance, List<Field> fields, String seperator, List<Object> evaluated) {
 			Map<String, String> map = fields.size() > 0 ? new LinkedHashMap<String, String>() : Collections.<String, String>emptyMap();
 			Map<String, Object> values = getValueByFieldName(instance, fields);
 			for(Entry<String, Object> fieldNameAndValue : values.entrySet()){
@@ -598,7 +585,7 @@ public class LEH {
 		 * @param evaluated
 		 * @return
 		 */
-		private String getToCollectionString(String prepend, Iterable<?> value, String append, String seperator, List<Object> evaluated) {
+		String getToCollectionString(String prepend, Iterable<?> value, String append, String seperator, List<Object> evaluated) {
 			return iteratorToString(prepend, value, seperator, append, iterableToStringFunction, evaluated);
 		}
 		
@@ -613,7 +600,7 @@ public class LEH {
 		 * @param evaluated
 		 * @return
 		 */
-		private String getToCollectionString(String prepend, Map<Object, Object> valueMap, String append, String seperator, List<Object> evaluated) {
+		String getToCollectionString(String prepend, Map<Object, Object> valueMap, String append, String seperator, List<Object> evaluated) {
 			return iteratorToString(prepend, valueMap.entrySet(), seperator, append, mapToStringFunction, evaluated);
 		}
 		
@@ -629,7 +616,7 @@ public class LEH {
 		 * @param evaluated
 		 * @return
 		 */
-		private String iteratorToString(String prepend, Iterable<?> collection, String seperator, String append, ToStringFunction function, List<Object> evaluated){
+		String iteratorToString(String prepend, Iterable<?> collection, String seperator, String append, ToStringFunction function, List<Object> evaluated){
 			Iterator<?> values = collection.iterator();
 			String toString = "";
 			if(values.hasNext()){
@@ -656,7 +643,7 @@ public class LEH {
 		 * @param fields
 		 * @return
 		 */
-		private Map<String, Object> getValueByFieldName(Object instance, List<Field> fields){
+		Map<String, Object> getValueByFieldName(Object instance, List<Field> fields){
 			Map<String, Object> valueByFieldName = new LinkedHashMap<String, Object>();
 			for(Field field : fields){
 				Object value = getValue(field, instance);
@@ -672,7 +659,7 @@ public class LEH {
 		 * @param instance
 		 * @return
 		 */
-		private Object getValue(Field field, Object instance) {
+		Object getValue(Field field, Object instance) {
 			if(field == null || instance == null){
 				return null;
 			}
@@ -711,7 +698,7 @@ public class LEH {
 		 * @param isLEHAware
 		 * @return
 		 */
-		private List<Field> getFields(Map<Class<?>, List<Field>> map, Class<?> instanceClass, boolean isLEHAware) {
+		List<Field> getFields(Map<Class<?>, List<Field>> map, Class<?> instanceClass, boolean isLEHAware) {
 			List<Field> fields = map.get(instanceClass);
 			if(fields == null){
 				readFields(instanceClass, isLEHAware);
@@ -727,7 +714,7 @@ public class LEH {
 		 * @param instanceClass
 		 * @param isLEHAware
 		 */
-		private void readFields(Class<?> instanceClass, boolean isLEHAware) {
+		void readFields(Class<?> instanceClass, boolean isLEHAware) {
 			List<Field> equalsFields = new ArrayList<Field>();
 			List<Field> identityFields = new ArrayList<Field>();
 			Class<?> lClass = instanceClass;
@@ -758,7 +745,7 @@ public class LEH {
 		 * @param instance
 		 * @return
 		 */
-		public boolean isLEHAware(Object instance) {
+		boolean isLEHAware(Object instance) {
 			if(instance == null){
 				return false;
 			}

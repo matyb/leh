@@ -270,7 +270,7 @@ public class LEHTest {
 	}
 	
 	@Test
-	public void testMultipleLayersOfWrappedProxyInstance() throws Exception {
+	public void testMultipleLayersOfWrapperInstances() throws Exception {
 		// not a smart thing to do, but doesn't hurt the behavior
 		LEHAssertions.verify(LEH.getInstance(LEH.getInstance(new Person())), 
 								LEH.getInstance(LEH.getInstance(new Person())), true);

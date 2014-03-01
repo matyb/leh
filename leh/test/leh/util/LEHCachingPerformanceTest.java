@@ -11,7 +11,6 @@ import leh.example.person.Employee;
 import leh.example.person.Person;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /*
@@ -31,29 +30,23 @@ public class LEHCachingPerformanceTest {
 	
 	/*
 	 * last count: on an i5 4670K 16GB of DDR3 and SSD in Win 8 w/ JDK 1.7.0.45.
-	 * 
  	 * 
-	 * took: 425ms. for:   *Executing publicly exposed APIs 1000 times.
-	 * took: 133ms. for:     =LEH Equivalent java.lang.Object methods:
-	 * took: 27ms. for:        -class leh.util.LEH.getHashCode(instance1)
-	 * took: 2ms. for:         -class leh.util.LEH.isEqual(instance1, instance1.getSpouse())
-	 * took: 43ms. for:        -class leh.util.LEH.isEqual(instance1, instance2)
-	 * took: 60ms. for:        -class leh.util.LEH.getToString(person1)
-	 * took: 288ms. for:     =LEH Proxy Methods:
-	 * took: 40ms. for:        -class com.sun.proxy.$Proxy5.hashCode()
-	 * took: 3ms. for:         -class com.sun.proxy.$Proxy5.equals(instance1.getSpouse())
-	 * took: 53ms. for:        -class com.sun.proxy.$Proxy5.equals(samePersonButDifferentInstance)
-	 * took: 173ms. for:       -class com.sun.proxy.$Proxy5.toString()
+	 * took: 243ms. for:   *Executing supported Object APIs 1000 times.
+	 * took: 241ms. for:     =LEH Equivalent java.lang.Object methods:
+     * took: 50ms. for:        -class leh.util.LEH$LEHInstance.getHashCode(instance1)
+     * took: 5ms. for:         -class leh.util.LEH$LEHInstance.isEqual(instance1, instance1.getSpouse())
+     * took: 48ms. for:        -class leh.util.LEH$LEHInstance.isEqual(instance1, instance2)
+     * took: 134ms. for:       -class leh.util.LEH$LEHInstance.getToString(person1)
 	 * 
 	 * @throws Exception
 	 */
-	@Test @Ignore
+	@Test 
 	public void testCachingPerformance_1000times() throws Exception {
 		executePubliclyExposedLEHMethods(1000);
 	}
 
 	private void executePubliclyExposedLEHMethods(final int runs) {
-		time(1, "*Executing publicly exposed APIs " + runs + " times.", new Runnable(){
+		time(1, "*Executing supported Object APIs " + runs + " times.", new Runnable(){
 			public void run() {
 				final Employee instance1 = createEmployee();
 				final Employee instance2 = createEmployee();
@@ -72,24 +65,25 @@ public class LEHCachingPerformanceTest {
 	private void executePubliclyExposedLEHMethods(int runs, final Employee instance1, final Employee instance2) {
 		final LEHDelegate leh = LEH.getInstance();
 		String testNamePrefix = "    -" + leh.getClass() + ".";
+		final Object wrappedInstance = leh.getInstance(instance1);
 		time(runs, testNamePrefix + "getToString(person1)", new Runnable() {
 			public void run() {
-				leh.getToString(instance1).toString();
+				wrappedInstance.toString();
 			}
 		});
 		time(runs, testNamePrefix + "isEqual(instance1, instance2)", new Runnable() {
 			public void run() {
-				leh.getEquals(instance1).equals(instance2);
+				wrappedInstance.equals(instance2);
 			}
 		});
 		time(runs, testNamePrefix + "isEqual(instance1, instance1.getSpouse())", new Runnable() {
 			public void run() {
-				leh.getEquals(instance1).equals(instance1.getSpouse());
+				wrappedInstance.equals(instance1.getSpouse());
 			}
 		});
 		time(runs, testNamePrefix + "getHashCode(instance1)", new Runnable() {
 			public void run() {
-				leh.getHashCode(instance1).hashCode();
+				wrappedInstance.hashCode();
 			}
 		});
 	}
