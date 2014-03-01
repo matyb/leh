@@ -35,11 +35,7 @@ A field level annotation indicating a field is not to be considered part of the 
 ```
 leh.util.LEH
 ```  
-Provides Object equals/hashCode/toString equivalents in a generic, reflective and reusable form. Reflectively accesses fields of LEHAware instances for equals/hashCode/toString determinations. Instances discovered in evaluation that do not implement LEHAware are merely evaluated per their implementation of equals/hashCode/toString.
-```
-leh.util.wrappers.LEHWrapper
-```  
-A proxy factory that wraps Objects to intercept invocations of equals/hashCode/toString and passes them to the corresponding LEH methods for evaluation.
+Produces Wrapper instances that dispatch equals, hashCode, and toString to methods that implement logical equals, hashCode, and toString on the argument's behalf. Reflectively accesses fields of LEHAware instances for equals/hashCode/toString determinations. Instances discovered in evaluation that do not implement LEHAware are merely evaluated per their implementation of equals/hashCode/toString.
 
 Usage
 -----
