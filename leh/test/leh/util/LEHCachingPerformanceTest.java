@@ -9,7 +9,6 @@ import leh.example.food.Food;
 import leh.example.food.Food.FoodType;
 import leh.example.person.Employee;
 import leh.example.person.Person;
-import leh.util.wrapper.LEHWrapper;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -58,11 +57,6 @@ public class LEHCachingPerformanceTest {
 			public void run() {
 				final Employee instance1 = createEmployee();
 				final Employee instance2 = createEmployee();
-				time(1, "  =LEH Proxy Methods:", new Runnable(){
-					public void run() {
-						executeObjectMethodsOnWrapper(runs, instance1, instance2);
-					}
-				});
 				time(1, "  =LEH Equivalent java.lang.Object methods:", new Runnable() {
 					public void run() {
 						executePubliclyExposedLEHMethods(runs, instance1, instance2);
@@ -80,7 +74,7 @@ public class LEHCachingPerformanceTest {
 		String testNamePrefix = "    -" + leh.getClass() + ".";
 		time(runs, testNamePrefix + "getToString(person1)", new Runnable() {
 			public void run() {
-				leh.getToString(instance1);
+				leh.getToString(instance1).toString();
 			}
 		});
 		time(runs, testNamePrefix + "isEqual(instance1, instance2)", new Runnable() {
@@ -95,34 +89,7 @@ public class LEHCachingPerformanceTest {
 		});
 		time(runs, testNamePrefix + "getHashCode(instance1)", new Runnable() {
 			public void run() {
-				leh.getHashCode(instance1);
-			}
-		});
-	}
-
-	private void executeObjectMethodsOnWrapper(int runs, final Employee instance1, final Employee instance2) {
-		final LEHWrapper wrapper = LEHWrapper.getInstance();
-		final Object person = wrapper.wrap(instance1);
-		final Object samePersonDifferentInstance = wrapper.wrap(instance2);
-		String testNamePrefix = "    -" + person.getClass();
-		time(runs, testNamePrefix + ".toString()", new Runnable() {
-			public void run() {
-				person.toString();
-			}
-		});
-		time(runs, testNamePrefix + ".equals(samePersonButDifferentInstance)", new Runnable() {
-			public void run() {
-				person.equals(samePersonDifferentInstance);
-			}
-		});
-		time(runs, testNamePrefix + ".equals(instance1.getSpouse())", new Runnable() {
-			public void run() {
-				person.equals(instance1.getSpouse());
-			}
-		});
-		time(runs, testNamePrefix + ".hashCode()", new Runnable() {
-			public void run() {
-				person.hashCode();
+				leh.getHashCode(instance1).hashCode();
 			}
 		});
 	}

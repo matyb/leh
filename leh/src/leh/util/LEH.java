@@ -15,8 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import leh.annotations.Identity;
 import leh.annotations.Transient;
-import leh.util.wrapper.LEHMethodHandler;
-import leh.util.wrapper.LEHWrapper;
 
 /**
  * A utility class that operates on Entity instances or on the presumption of an
@@ -39,14 +37,34 @@ public class LEH {
 					Collections.unmodifiableMap(instance.equalsHashCodeFields));
 	
 	/**
-	 * Returns a referentially transparent (immutable) version of the singleton.
+	 * Returns a referentially transparent (but immutable) version of the singleton.
 	 * @return
 	 */
 	public static LEHDelegate getInstance(){
 		return immutableInstance;
 	}
+
+	public static Wrapper getInstance(final Object value) {
+		return new Wrapper(){
+			public Object getWrappedInstance() {
+				return value;
+			}
+			@Override
+			public boolean equals(Object obj) {
+				return ((LEHInstance)getInstance()).isEqual(value, obj, true);
+			}
+			@Override
+			public int hashCode() {
+				return ((LEHInstance)getInstance()).getHashCode(value, true);
+			}
+			@Override
+			public String toString() {
+				return ((LEHInstance)getInstance()).getToString(value, true);
+			}
+		};
+	}
 	
-	static class LEHInstance implements LEHDelegate {
+	private static class LEHInstance implements LEHDelegate {
 		/**
 		 * List of @Identity annotated fields as discovered via reflection, by
 		 * class. Acts as local cache mitigating performance hit associated with
@@ -146,22 +164,6 @@ public class LEH {
 		boolean isEqual(Object instance1, Object instance2, boolean isLEHAware){
 			return areValuesEqual(instance1, instance2, equalsHashCodeFields, new ArrayList<Object>(), isLEHAware);
 		}
-		
-		/**
-		 * To return true both instances must be of identical types that implement
-		 * Entity, and fields annotated with @Identity must have equal values in
-		 * both instances. Values found to be of types implementing Entity in 
-		 * reflectively testing for identity enter the same test recursively.
-		 * 
-		 * @see leh.util.LEHAware
-		 * @see leh.annotations.Identity
-		 * @param instance1
-		 * @param instance2
-		 * @return
-		 */
-		public boolean isIdentity(Object instance1, Object instance2){
-			return areValuesEqual(instance1, instance2, identityFields, new ArrayList<Object>(), isLEHAware(instance1));
-		}
 
 		private boolean areValuesEqual(Object instance1, Object instance2,
 				Map<Class<?>, List<Field>> fields, List<Object> evaluated) {
@@ -223,7 +225,7 @@ public class LEH {
 			}
 			Map<String, Object> identity = getValueByFieldName(instance, identityFields);
 			for(Entry<String, Object> entry : identity.entrySet()){
-				entry.setValue(LEHWrapper.getInstance().wrap(entry.getValue()));
+				entry.setValue(LEH.getInstance(entry.getValue()));
 			}
 			return identity;
 		}
@@ -259,7 +261,10 @@ public class LEH {
 		 * @return
 		 */
 		private Object resolveInstance(Object instance) {
-			return LEHMethodHandler.unwrapLEHProxy(instance);
+			while(instance instanceof Wrapper){
+				instance = ((Wrapper)instance).getWrappedInstance();
+			}
+			return instance;
 		}
 
 		/**
