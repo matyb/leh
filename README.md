@@ -47,7 +47,7 @@ Usage
 Take a new or existing class and implement leh.util.LEHAware. This indicates instances of that type are eligible for evaluation by leh.util.LEH. A wrapped instance from leh.util.LEHWrapper will be made to implement LEHAware (which makes it eligible for evaluation by leh.util.LEH) and will intercept calls to equals/hashCode/toString and direct them to LEH for evaluation.
 
 Get a reference to LEH singleton:
-```LEH leh = LEH.getInstance();```  
+```LEHDelegate leh = LEH.getInstance();```  
 To see if two LEHAware instances are logically equal: ```leh.isEquals(Object instance1, Object instance2)```  
 To get an LEHAware instance's hashCode derived solely from its type and values: ```leh.getHashCode(Object instance)```  
 To get an LEHAware instance's toString derived solely from its type and values: ```leh.getToString(Object instance)```  
@@ -57,11 +57,11 @@ Wrapper types are available for instances that do not implement LEHAware, howeve
 Wrapped instances dispatch to leh.util.LEH for equals/hashCode/toString Object method invocations to make the wrapper instance behave as though the wrapped instance honors logical equality regardless of whether the instance actually implements those methods or how:  
 
 Get a reference to the Wrapper factory:
-```LEHWrapper wrapper = LEHWrapper.getInstance();```  
+```LEHDelegate wrapper = LEH.getInstance();```  
 "Wrap" the instances returning a new wrapper that dispatches equals/hashCode/toString to LEH instead of java.lang.Object.
 ```
-Object someObject1 = wrapper.wrap(new Object());
-Object someObject2 = wrapper.wrap(new Object());
+Wrapper someObject1 = wrapper.getInstance(new Object());
+Wrapper someObject2 = wrapper.getInstance(new Object());
 ```
 The wrapper does implement logical equality, hashCode, and toString:
 ```
