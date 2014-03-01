@@ -68,7 +68,7 @@ public class LEHSymmetryUtils {
 		// symmetry
 		assertEquals(
 				"Order of arguments is significant, equals methods should be symmetric.",
-				delegate.isEqual(instance1, instance2), delegate.isEqual(instance2, instance1));
+				delegate.getEquals(instance1).equals(instance2), delegate.getEquals(instance2).equals(instance1));
 		verifyNull(instance1, instance2, delegate);
 		verifyReflexion(instance1, instance2, delegate);
 	}
@@ -81,8 +81,8 @@ public class LEHSymmetryUtils {
 	 * @param toString
 	 */
 	public static void veryifyToString(Object instance1, String toString) {
-		assertEquals(toString, LEH.getInstance().getToString(instance1));
-		assertEquals(toString, LEHWrapperDelegate.getInstance().getToString(instance1));
+		assertEquals(toString, LEH.getInstance().getToString(instance1).toString());
+		assertEquals(toString, LEHWrapperDelegate.getInstance().getToString(instance1).toString());
 	}
 	
 	/**
@@ -99,12 +99,12 @@ public class LEHSymmetryUtils {
 	private static void verifyToString(Object instance1, Object instance2,
 			boolean isEqual, LEHDelegate delegate, String... toStrings) {
 		if(toStrings != null && toStrings.length == 2){
-			assertEquals(toStrings[0], delegate.getToString(instance1));
-			assertEquals(toStrings[1], delegate.getToString(instance2));
+			assertEquals(toStrings[0], delegate.getToString(instance1).toString());
+			assertEquals(toStrings[1], delegate.getToString(instance2).toString());
 		}else{
 			assertEquals(
 					"Expected the strings " + instance1 + " and " + instance2 + (isEqual ? "" : " NOT") + " to be equal.", 
-					isEqual, delegate.getToString(instance2).equals(delegate.getToString(instance1)));
+					isEqual, delegate.getToString(instance2).toString().equals(delegate.getToString(instance1).toString()));
 		}
 	}
 
@@ -112,26 +112,26 @@ public class LEHSymmetryUtils {
 			LEHDelegate delegate) {
 		assertTrue(
 				"Somehow \""+instance1+"\" was not equal to itself.",
-				delegate.isEqual(instance1, instance1));
+				delegate.getEquals(instance1).equals(instance1));
 		assertTrue(
 				"Somehow \""+instance2+"\" was not equal to itself.",
-				delegate.isEqual(instance2, instance2));
+				delegate.getEquals(instance2).equals(instance2));
 	}
 
 	private static void verifyNull(Object instance1, Object instance2,
 			LEHDelegate delegate) {
 		assertFalse(
 				"Somehow \""+instance1+"\" was equal to null.",
-				delegate.isEqual(instance1, null));
+				delegate.getEquals(instance1).equals(null));
 		assertFalse(
 				"Somehow \""+instance2+"\" was equal to null.",
-				delegate.isEqual(instance2, null));
+				delegate.getEquals(instance2).equals(null));
 		assertFalse(
 				"Somehow \""+instance1+"\" was equal to null.",
-				delegate.isEqual(null, instance1));
+				delegate.getEquals(null).equals(instance1));
 		assertFalse(
 				"Somehow \""+instance2+"\" was equal to null.",
-				delegate.isEqual(null, instance2));
+				delegate.getEquals(null).equals(instance2));
 	}
 
 	private static void verifyMatchingEqualityHashCodeToString(
@@ -140,10 +140,10 @@ public class LEHSymmetryUtils {
 		// matches test expectation
 		assertEquals(
 				"Expected " + instance1 + " and " + instance2 + (isEqual ? "" : " NOT") + " to be equal.", 
-				isEqual, delegate.isEqual(instance2, instance1));
+				isEqual, delegate.getEquals(instance2).equals(instance1));
 		assertEquals(
 				"Expected " + instance1 + " and " + instance2 + (isEqual ? "" : " NOT") + " to hash the same.", 
-				isEqual, delegate.getHashCode(instance1) == delegate.getHashCode(instance2));
+				isEqual, delegate.getHashCode(instance1).hashCode() == delegate.getHashCode(instance2).hashCode());
 	}
 	
 	

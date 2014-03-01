@@ -7,8 +7,8 @@ import java.lang.reflect.Proxy;
  * Unwraps Wrapped LEH Proxy instances to get the core unwrapped instance for
  * reflective access.
  */
-public abstract class LEHMethodHandler extends MethodHandler{
 
+public abstract class LEHMethodHandler extends MethodHandler {
 	private static final long serialVersionUID = 221057597747859063L;
 
 	public LEHMethodHandler(String name, Class<?>[] argumentTypes) {
@@ -66,7 +66,7 @@ public abstract class LEHMethodHandler extends MethodHandler{
 	 * @return
 	 */
 	public static Object unwrapLEHProxy(Object instance){
-		Class<?> instanceClass = instance == null ? int.class : instance.getClass();
+		Class<?> instanceClass = instance == null ? void.class : instance.getClass();
 		if(Proxy.isProxyClass(instanceClass)){
 			InvocationHandler invocationHandler = Proxy.getInvocationHandler(instance);
 			if(invocationHandler instanceof LEHInvocationHandler){

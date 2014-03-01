@@ -1,0 +1,17 @@
+Testsuite: leh.util.LEHCachingPerformanceTest
+Tests run: 1, Failures: 0, Errors: 0, Time elapsed: 0.282 sec
+------------- Standard Output ---------------
+took: 269ms. for:   *Executing publicly exposed APIs 1000 times.
+took: 80ms. for:      =LEH Equivalent java.lang.Object methods:
+took: 32ms. for:        -class leh.util.LEH.getHashCode(instance1)
+took: 3ms. for:         -class leh.util.LEH.isEqual(instance1, instance1.getSpouse())
+took: 17ms. for:        -class leh.util.LEH.isEqual(instance1, instance2)
+took: 24ms. for:        -class leh.util.LEH.getToString(person1)
+took: 185ms. for:     =LEH Proxy Methods:
+took: 41ms. for:        -class com.sun.proxy.$Proxy5.hashCode()
+took: 12ms. for:        -class com.sun.proxy.$Proxy5.equals(instance1.getSpouse())
+took: 16ms. for:        -class com.sun.proxy.$Proxy5.equals(samePersonButDifferentInstance)
+took: 109ms. for:       -class com.sun.proxy.$Proxy5.toString()
+------------- ---------------- ---------------
+
+Testcase: testCachingPerformance_1000times took 0.273 sec

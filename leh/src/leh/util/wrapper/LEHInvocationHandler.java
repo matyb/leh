@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,12 +39,28 @@ public class LEHInvocationHandler implements InvocationHandler, Serializable {
 	 * @param handlers
 	 */
 	public LEHInvocationHandler(Object wrappedInstance, List<MethodHandler> handlers){
+		this(wrappedInstance, toMap(handlers));
+	}
+
+	/**
+	 * Construct a new InvocationHandler that maps invocations to the supplied
+	 * handlers, or passes along the invocation to the wrapped object if no
+	 * handler is found.
+	 * 
+	 * @param wrappedInstance
+	 * @param handlers
+	 */
+	public LEHInvocationHandler(Object wrappedInstance, Map<String, MethodHandler> handlers){
 		this.wrappedInstance = wrappedInstance;
+		this.handlers = Collections.unmodifiableMap(handlers);
+	}
+	
+	private static Map<String, MethodHandler> toMap(List<MethodHandler> handlers) {
 		Map<String, MethodHandler> handlerByName = new HashMap<String, MethodHandler>();
 		for(MethodHandler handler : handlers){
 			handlerByName.put(handler.getName(), handler);
 		}
-		this.handlers = Collections.unmodifiableMap(handlerByName);
+		return handlerByName;
 	}
 	
 	/**
@@ -65,11 +82,15 @@ public class LEHInvocationHandler implements InvocationHandler, Serializable {
 		if (handler != null
 				&& ((arg2 == null && handler.getArgumentTypes().length == 0) || 
 					(arg2 != null && Arrays.equals(handler.getArgumentTypes(), arg1.getParameterTypes())))){
-			result = handler.invoke(wrappedInstance, arg1.getName(), arg2);
+			result = handler.invoke(wrappedInstance, arg1.getName(), arg2);           
 		}else{
 			result = arg1.invoke(wrappedInstance, arg2);
 		}
 		return result;
+	}
+	
+	public Map<String, MethodHandler> getHandlers(){
+		return new LinkedHashMap<String, MethodHandler>(handlers);
 	}
 	
 }

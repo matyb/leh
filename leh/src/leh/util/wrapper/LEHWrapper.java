@@ -94,7 +94,7 @@ public class LEHWrapper {
 	 * @return
 	 */
 	public LEHAware wrap(Object instance, List<MethodHandler> handlers) {
-		return (LEHAware)wrap(instance, handlers, LEHAware.class, new Class[0]);
+		return wrap(instance, handlers, LEHAware.class, new Class[0]);
 	}
 	
 	/**
@@ -145,13 +145,14 @@ public class LEHWrapper {
 	
 	/**
 	 * Returns a proxy wrapping the passed in instance that implements any of
-	 * the supplied equals/hashcode/toString handlers via Entity with LEH as
-	 * well as any supplied interfaces. Instance supplied must implement any
-	 * supplied interfaces if they are cast to that type or do not
-	 * have a concrete implementation of any specified methods nor
-	 * a handler associated for the call.
+	 * the supplied equals/hashcode/toString handlers and it implements
+	 * LEHAware, as well as any interfaces implemented by the instance. Instance
+	 * supplied must implement any supplied interfaces if they are cast to that
+	 * type or do not have a concrete implementation of any specified methods
+	 * nor a handler associated for the call.
 	 * 
-	 * Same as Object, List<MethodHandler>, Class<?>... method but casts to the first provided interface class 
+	 * Same as Object, List<MethodHandler>, Class<?>... method but casts to the
+	 * first provided interface class
 	 * 
 	 * @param instance
 	 * @param handlers
@@ -160,6 +161,9 @@ public class LEHWrapper {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> T wrap(Object instance, List<MethodHandler> handlers, Class<T> referencedInterfaceType, Class<?>... ifaces) {
+		if(instance == null){
+			return (T) new LEHAware(){};
+		}
 		Set<Class<?>> interfaces = new HashSet<Class<?>>(Arrays.asList(ifaces));
 		interfaces.add(LEHAware.class);
 		interfaces.add(referencedInterfaceType);

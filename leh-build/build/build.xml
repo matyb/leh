@@ -1,0 +1,81 @@
+<project name="LEH" basedir="../" default="build.app">
+
+	<property file="build/build.properties"/>
+
+	<description>
+      A method for evaluating logical equality/hashCode/toString reflectively. A wrapper 
+	  proxy factory is available as well to make instances not implementing LEHAware 
+	  behave as though they do and to intercept calls to equals/hashCode/toString for 
+	  redirection to LEH for evaluation.
+    </description>
+
+	<target name="clean">
+		<delete dir="${bin.dir}"/>
+	</target>
+
+	<target name="init" depends="clean">
+		<tstamp/>
+	</target>
+
+	<target name="mkdirs" depends="init">
+		<mkdir dir="${bin.dir}"/>
+	</target>
+
+	<target name="compile.shared" depends="mkdirs">
+		<mkdir dir="${shared.bin.dir}"/>
+		<javac target="1.5" source="1.5" srcdir="${shared.dir}" 
+			destdir="${shared.bin.dir}" includeantruntime="false"/>
+	</target>
+	
+	<target name="compile.src" depends="mkdirs, compile.shared">
+		<mkdir dir="${src.bin.dir}"/>
+		<javac target="1.5" source="1.5" srcdir="${src.dir}" destdir="${src.bin.dir}" includeantruntime="false">
+			<classpath>
+				<pathelement location="${shared.bin.dir}"/>
+			</classpath>
+		</javac>
+	</target>
+
+	<path id="test.classpath">
+		<pathelement location="${shared.bin.dir}"/>
+		<pathelement location="${src.bin.dir}"/>
+		<pathelement location="${test.bin.dir}"/>
+		<pathelement location="${test.bin.dir}/junit-4.11.jar"/>
+		<pathelement location="${test.bin.dir}/hamcrest-core-1.3.jar"/>
+	</path>
+
+	<target name="compile.test" depends="compile.src">
+		<mkdir dir="${test.bin.dir}"/>
+		<copy todir="${test.bin.dir}">
+			<fileset dir="${test.dir}" excludes="**/*.java"/>
+		</copy>
+		<javac srcdir="${test.dir}" destdir="${test.bin.dir}" debug="on" includeantruntime="false">
+			<classpath refid="test.classpath"/>
+		</javac>
+	</target>
+
+	<target name="test" depends="compile.test">
+		<mkdir dir="${reports.dir}"/>
+		<junit printsummary="yes" haltonfailure="yes">
+			<classpath>
+				<path refid="test.classpath"/>
+			</classpath>
+			<formatter type="plain"/>
+			<batchtest fork="no" todir="${reports.dir}">
+				<fileset dir="${test.bin.dir}">
+					<include name="**/*Test.class"/>
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+
+	<target name="build.app" depends="test">
+		<antcall target="clean"/>
+		<antcall target="compile.src"/>
+		<delete dir="${dist.dir}"/>
+		<mkdir dir="${dist.dir}"/>
+		<jar destfile="${dist.dir}/${jar.name}.jar" basedir="${src.bin.dir}"/>
+		<jar destfile="${dist.dir}/${shared.jar.name}.jar" basedir="${shared.bin.dir}"/>
+	</target>
+
+</project>

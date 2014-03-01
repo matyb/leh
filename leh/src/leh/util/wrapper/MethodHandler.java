@@ -1,6 +1,7 @@
 package leh.util.wrapper;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * A method implementation used by LEHInvocationHandler. Maps the name and
@@ -58,6 +59,11 @@ public abstract class MethodHandler implements Serializable {
 	 */
 	public Class<?>[] getArgumentTypes() {
 		return argumentTypes;
+	}
+	
+	@Override
+	public String toString() {
+		return getName() + Arrays.toString(getArgumentTypes());
 	}
 	
 }

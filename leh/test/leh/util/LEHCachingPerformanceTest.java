@@ -12,6 +12,7 @@ import leh.example.person.Person;
 import leh.util.wrapper.LEHWrapper;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /*
@@ -47,7 +48,7 @@ public class LEHCachingPerformanceTest {
 	 * 
 	 * @throws Exception
 	 */
-	@Test 
+	@Test @Ignore
 	public void testCachingPerformance_1000times() throws Exception {
 		executePubliclyExposedLEHMethods(1000);
 	}
@@ -75,7 +76,7 @@ public class LEHCachingPerformanceTest {
 	}
 
 	private void executePubliclyExposedLEHMethods(int runs, final Employee instance1, final Employee instance2) {
-		final LEH leh = LEH.getInstance();
+		final LEHDelegate leh = LEH.getInstance();
 		String testNamePrefix = "    -" + leh.getClass() + ".";
 		time(runs, testNamePrefix + "getToString(person1)", new Runnable() {
 			public void run() {
@@ -84,12 +85,12 @@ public class LEHCachingPerformanceTest {
 		});
 		time(runs, testNamePrefix + "isEqual(instance1, instance2)", new Runnable() {
 			public void run() {
-				leh.isEqual(instance1, instance2);
+				leh.getEquals(instance1).equals(instance2);
 			}
 		});
 		time(runs, testNamePrefix + "isEqual(instance1, instance1.getSpouse())", new Runnable() {
 			public void run() {
-				leh.isEqual(instance1, instance1.getSpouse());
+				leh.getEquals(instance1).equals(instance1.getSpouse());
 			}
 		});
 		time(runs, testNamePrefix + "getHashCode(instance1)", new Runnable() {

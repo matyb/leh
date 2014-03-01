@@ -1,0 +1,35 @@
+Testsuite: leh.util.LEHTest
+Tests run: 32, Failures: 0, Errors: 0, Time elapsed: 0.042 sec
+
+Testcase: testWithMapEntryNotEqual took 0.003 sec
+Testcase: testReusingLehOverridingToString took 0.001 sec
+Testcase: testNotEqualWithSameListElementDifferentCountCompliment took 0.001 sec
+Testcase: testNotEqualWithReferenceUnequalEntity took 0.002 sec
+Testcase: testReusingLehOverridingEqualsComplimentDifferentValues took 0.001 sec
+Testcase: testReusingLehOverridingEquals took 0.001 sec
+Testcase: testSubclass took 0 sec
+Testcase: testAllNull took 0 sec
+Testcase: testSelfReferenceToString took 0.001 sec
+Testcase: testEmptyEntityToString took 0 sec
+Testcase: testMultipleLayersOfWrappedProxyInstance took 0.003 sec
+Testcase: testCircularReferenceToString took 0.002 sec
+Testcase: testWithMapEntry took 0.002 sec
+Testcase: testEqualsHashCodeAnonymousInnerClassWrapped took 0.002 sec
+Testcase: testReusingLehOverridingEqualsComplimentDifferentClass took 0.002 sec
+Testcase: testReusingLehOverridingHashCode took 0.001 sec
+Testcase: testSelfReference took 0.001 sec
+Testcase: testIgnoresFieldsWhereIdentityAnnotationIsPresentAndValueIsDefault took 0.001 sec
+Testcase: testReusingLehOverridingHashCodeComplimentDifferentClass took 0.001 sec
+Testcase: testNotEqualWithListElement took 0.001 sec
+Testcase: testToStringOnAnonymousInnerClass took 0.001 sec
+Testcase: testReusingLehOverridingToStringComplimentDifferentValues took 0 sec
+Testcase: testReusingLehOverridingHashCodeComplimentDifferentValues took 0 sec
+Testcase: testWithReferenceToOtherEqualEntity took 0.001 sec
+Testcase: testPopulatedEntityToString took 0 sec
+Testcase: testClassesUnderTestDoNotImplementHashCodeNorEquals took 0 sec
+Testcase: testNotEqualWithSameListElementDifferentCount took 0.001 sec
+Testcase: testWithSameListElement took 0.001 sec
+Testcase: testWithMapEntryNotEqualCompliment took 0.001 sec
+Testcase: testDifferentSubclasses took 0 sec
+Testcase: testReusingLehOverridingToStringComplimentDifferentClass took 0.001 sec
+Testcase: testCrossReference took 0.001 sec

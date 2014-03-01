@@ -1,5 +1,7 @@
 package leh.util;
 
+import java.util.Map;
+
 import leh.util.wrapper.LEHWrapper;
 
 /**
@@ -24,19 +26,21 @@ public class LEHWrapperDelegate implements LEHDelegate {
 		return instance;
 	}
 	
-	public boolean isEqual(Object instance1, Object instance2) {
-		instance1 = instance1 == null ? null : wrapper.wrap(instance1);
-		instance2 = instance2 == null ? null : wrapper.wrap(instance2);
-		return instance1 == null ? 
-				instance2.equals(instance1) : instance1.equals(instance2);
+	public Object getToString(Object instance) {
+		return wrapper.wrap(instance);
 	}
 	
-	public String getToString(Object instance) {
-		return "" + wrapper.wrap(instance);
+	public Object getHashCode(Object instance) {
+		return wrapper.wrap(instance);
+	}
+
+
+	public Object getEquals(Object instance1) {
+		return wrapper.wrap(instance1);
 	}
 	
-	public int getHashCode(Object instance) {
-		return wrapper.wrap(instance).hashCode();
+	public Map<String, Object> getIdentity(Object instance) {
+		throw new RuntimeException("I'm untested!");
 	}
 	
 }

@@ -23,17 +23,17 @@ public class FoodInventory extends Food implements LEHAware {
 	
 	@Override
 	public boolean equals(Object obj) {
-		return LEH.getInstance().isEqual(this, obj);
+		return LEH.getInstance().getEquals(this).equals(obj);
 	}
 	
 	@Override
 	public int hashCode() {
-		return LEH.getInstance().getHashCode(this);
+		return LEH.getInstance().getHashCode(this).hashCode();
 	}
 	
 	@Override
 	public String toString(){
-		return LEH.getInstance().getToString(this);
+		return LEH.getInstance().getToString(this).toString();
 	}
 	
 }
