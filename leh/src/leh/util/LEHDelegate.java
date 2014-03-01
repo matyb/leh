@@ -3,10 +3,23 @@ package leh.util;
 import java.util.Map;
 
 public interface LEHDelegate {
+	
+	/**
+	 * Returns a Wrapper implementing equals, hashCode, and toString logically for the
+	 * supplied instance.
+	 * 
+	 * @param instance
+	 * @see leh.util.LEHAware
+	 * @see leh.annotations.Identity
+	 * @see leh.annotations.Transient
+	 * @return
+	 */
+	Wrapper getInstance(Object instance);
+	
 	/**
 	 * To return true either of the statements:<BR> 
-	 *     instance1 == instance2;<BR>
-	 *     instance1.equals(instace2);<BR> 
+	 *     instance == instance2;<BR>
+	 *     instance.equals(instance2);<BR> 
 	 *     
 	 * evaluate to true; or if both instances are of types that implement LEHAware, 
 	 * than fields may be tested by reflection for equality. Values found to be 
@@ -19,10 +32,10 @@ public interface LEHDelegate {
 	 * @see leh.util.LEHAware
 	 * @see leh.annotations.Identity
 	 * @see leh.annotations.Transient
-	 * @param instance1
+	 * @param instance
 	 * @return
 	 */
-	Object getEquals(Object instance1);
+	Object getEquals(Object instance);
 	
 	/**
 	 * Return an Object that implements hashCode such that when it is invoked it
@@ -30,6 +43,9 @@ public interface LEHDelegate {
 	 * the instances hashCode, or a default if it is null.
 	 * 
 	 * @param instance
+	 * @see leh.util.LEHAware
+	 * @see leh.annotations.Identity
+	 * @see leh.annotations.Transient
 	 * @return
 	 */
 	Object getHashCode(Object instance);

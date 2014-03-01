@@ -1,6 +1,8 @@
 package leh.util;
 
-public interface Wrapper {
+import java.io.Serializable;
+
+public interface Wrapper extends Serializable {
 
 	Object getWrappedInstance();
 	

@@ -23,45 +23,24 @@ import leh.annotations.Transient;
  */
 public class LEH {
 	
-	/**
-	 * Private instance, for use internally.
-	 */
-	private static LEHInstance instance = new LEHInstance();
-	
-	/**
-	 * State of private mutable instance is wrapped to prevent mutation when
-	 * exposed externally.
-	 */
-	private static LEHDelegate immutableInstance = 
-			new LEHInstance(Collections.unmodifiableMap(instance.identityFields),
-					Collections.unmodifiableMap(instance.equalsHashCodeFields));
+	private static Map<Long, LEHDelegate> delegateByThread = new ConcurrentHashMap<Long, LEHDelegate>(); 
 	
 	/**
 	 * Returns a referentially transparent (but immutable) version of the singleton.
 	 * @return
 	 */
-	public static LEHDelegate getInstance(){
-		return immutableInstance;
+	public static synchronized LEHDelegate getInstance(){
+		long theadId = Thread.currentThread().getId();
+		LEHDelegate delegate = delegateByThread.get(theadId);
+		if(delegate == null){
+			delegate = new LEHInstance();
+			delegateByThread.put(theadId, delegate);
+		}
+		return delegate;
 	}
 
-	public static Wrapper getInstance(final Object value) {
-		return new Wrapper(){
-			public Object getWrappedInstance() {
-				return value;
-			}
-			@Override
-			public boolean equals(Object obj) {
-				return ((LEHInstance)getInstance()).isEqual(value, obj, true);
-			}
-			@Override
-			public int hashCode() {
-				return ((LEHInstance)getInstance()).getHashCode(value, true);
-			}
-			@Override
-			public String toString() {
-				return ((LEHInstance)getInstance()).getToString(value, true);
-			}
-		};
+	public static synchronized Wrapper getInstance(final Object value) {
+		return getInstance().getInstance(value);
 	}
 	
 	private static class LEHInstance implements LEHDelegate {
@@ -105,8 +84,8 @@ public class LEH {
 		 * Constructor used internally for mutable reference to singleton instance.
 		 */
 		private LEHInstance(){
-			this(new ConcurrentHashMap<Class<?>, List<Field>>(),
-				 new ConcurrentHashMap<Class<?>, List<Field>>());
+			this(new LinkedHashMap<Class<?>, List<Field>>(),
+				 new LinkedHashMap<Class<?>, List<Field>>());
 		}
 		
 		/**
@@ -156,6 +135,7 @@ public class LEH {
 		 * 
 		 * @see leh.util.LEHAware
 		 * @see leh.annotations.Identity
+		 * @see leh.annotations.Transient
 		 * @param instance1
 		 * @param instance2
 		 * @param isLEHAware
@@ -165,6 +145,38 @@ public class LEH {
 			return areValuesEqual(instance1, instance2, equalsHashCodeFields, new ArrayList<Object>(), isLEHAware);
 		}
 
+		/**
+		 * Returns a Wrapper over the passed in instance which implements
+		 * equals, hashCode, and toString logically on its behalf.
+		 * 
+		 * @see leh.util.LEHAware
+		 * @see leh.annotations.Identity
+		 * @see leh.annotations.Transient
+		 * @param value
+		 */
+		public Wrapper getInstance(final Object value) {
+			return new Wrapper(){
+				
+				private static final long serialVersionUID = 2996123428481468394L;
+				
+				public Object getWrappedInstance() {
+					return value;
+				}
+				@Override
+				public boolean equals(Object obj) {
+					return isEqual(value, obj, true);
+				}
+				@Override
+				public int hashCode() {
+					return getHashCode(value, true);
+				}
+				@Override
+				public String toString() {
+					return getToString(value, true);
+				}
+			};
+		}
+		
 		private boolean areValuesEqual(Object instance1, Object instance2,
 				Map<Class<?>, List<Field>> fields, List<Object> evaluated) {
 			return areValuesEqual(instance1, instance2, fields, evaluated, isLEHAware(instance1));
@@ -715,7 +727,7 @@ public class LEH {
 		 * @param instanceClass
 		 * @param isLEHAware
 		 */
-		private synchronized void readFields(Class<?> instanceClass, boolean isLEHAware) {
+		private void readFields(Class<?> instanceClass, boolean isLEHAware) {
 			List<Field> equalsFields = new ArrayList<Field>();
 			List<Field> identityFields = new ArrayList<Field>();
 			Class<?> lClass = instanceClass;
@@ -735,10 +747,10 @@ public class LEH {
 				}
 				lClass = lClass.getSuperclass();
 			}
-			instance.equalsHashCodeFields.put(instanceClass, equalsFields);
-			instance.identityFields.put(instanceClass, identityFields);
+			this.equalsHashCodeFields.put(instanceClass, equalsFields);
+			this.identityFields.put(instanceClass, identityFields);
 		}
-
+		
 		/**
 		 * Returns true if instance supplied as argument is of a type that
 		 * implements Entity or is a class that is equal to or a subtype of Entity.
