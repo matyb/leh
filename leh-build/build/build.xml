@@ -1,6 +1,6 @@
-<project name="LEH" basedir="../" default="build.app">
+<project name="LEH" basedir="../../" default="build.app">
 
-	<property file="build/build.properties"/>
+	<property file="leh-build/build/build.properties"/>
 
 	<description>
       A method for evaluating logical equality/hashCode/toString reflectively. A wrapper 
@@ -20,24 +20,13 @@
 	<target name="mkdirs" depends="init">
 		<mkdir dir="${bin.dir}"/>
 	</target>
-
-	<target name="compile.shared" depends="mkdirs">
-		<mkdir dir="${shared.bin.dir}"/>
-		<javac target="1.5" source="1.5" srcdir="${shared.dir}" 
-			destdir="${shared.bin.dir}" includeantruntime="false"/>
-	</target>
 	
-	<target name="compile.src" depends="mkdirs, compile.shared">
+	<target name="compile.src" depends="mkdirs">
 		<mkdir dir="${src.bin.dir}"/>
-		<javac target="1.5" source="1.5" srcdir="${src.dir}" destdir="${src.bin.dir}" includeantruntime="false">
-			<classpath>
-				<pathelement location="${shared.bin.dir}"/>
-			</classpath>
-		</javac>
+		<javac target="1.5" source="1.5" srcdir="${src.dir}" destdir="${src.bin.dir}" includeantruntime="false"/>
 	</target>
 
 	<path id="test.classpath">
-		<pathelement location="${shared.bin.dir}"/>
 		<pathelement location="${src.bin.dir}"/>
 		<pathelement location="${test.bin.dir}"/>
 		<pathelement location="${test.bin.dir}/junit-4.11.jar"/>
@@ -75,7 +64,6 @@
 		<delete dir="${dist.dir}"/>
 		<mkdir dir="${dist.dir}"/>
 		<jar destfile="${dist.dir}/${jar.name}.jar" basedir="${src.bin.dir}"/>
-		<jar destfile="${dist.dir}/${shared.jar.name}.jar" basedir="${shared.bin.dir}"/>
 	</target>
 
 </project>
