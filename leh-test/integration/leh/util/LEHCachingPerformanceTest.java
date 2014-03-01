@@ -13,12 +13,6 @@ import leh.example.person.Person;
 import org.junit.Before;
 import org.junit.Test;
 
-/*
- * Tests caching performance - disabled in CI and
- * NOT TECHNICALLY A UNIT TEST AT ALL by virtue
- * of it lacking asserts, testing course grained
- * APIs, etc.
- */
 public class LEHCachingPerformanceTest {
 	
 	List<String> timings;

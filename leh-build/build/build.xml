@@ -3,67 +3,113 @@
 	<property file="leh-build/build/build.properties"/>
 
 	<description>
-      A method for evaluating logical equality/hashCode/toString reflectively. A wrapper 
-	  proxy factory is available as well to make instances not implementing LEHAware 
-	  behave as though they do and to intercept calls to equals/hashCode/toString for 
-	  redirection to LEH for evaluation.
+      A method for evaluating logical equality/hashCode/toString reflectively. Utilizes a small
+      set of conventions to permit you to implement equals/hashCode/toString on objects without
+      modifying their source. With access to an objects source the interpretation of values
+      in these methods may be customized through the use of annotations. 
     </description>
 
 	<target name="clean">
-		<delete dir="${bin.dir}"/>
+		<delete dir="${bin.dir}" />
 	</target>
 
 	<target name="init" depends="clean">
-		<tstamp/>
+		<tstamp />
 	</target>
 
 	<target name="mkdirs" depends="init">
-		<mkdir dir="${bin.dir}"/>
+		<mkdir dir="${bin.dir}" />
 	</target>
-	
+
 	<target name="compile.src" depends="mkdirs">
-		<mkdir dir="${src.bin.dir}"/>
-		<javac target="1.5" source="1.5" srcdir="${src.dir}" destdir="${src.bin.dir}" includeantruntime="false"/>
+		<mkdir dir="${src.bin.dir}" />
+		<javac target="1.5" source="1.5" srcdir="${src.dir}" destdir="${src.bin.dir}"
+			includeantruntime="false" />
 	</target>
 
 	<path id="test.classpath">
-		<pathelement location="${src.bin.dir}"/>
-		<pathelement location="${test.bin.dir}"/>
-		<pathelement location="${test.bin.dir}/junit-4.11.jar"/>
-		<pathelement location="${test.bin.dir}/hamcrest-core-1.3.jar"/>
+		<pathelement location="${src.bin.dir}" />
+		<pathelement location="${test.lib.dir}/junit-4.11.jar" />
+		<pathelement location="${test.lib.dir}/hamcrest-core-1.3.jar" />
 	</path>
 
-	<target name="compile.test" depends="compile.src">
-		<mkdir dir="${test.bin.dir}"/>
-		<copy todir="${test.bin.dir}">
-			<fileset dir="${test.dir}" excludes="**/*.java"/>
-		</copy>
-		<javac srcdir="${test.dir}" destdir="${test.bin.dir}" debug="on" includeantruntime="false">
-			<classpath refid="test.classpath"/>
-		</javac>
+	<path id="unit.test.classpath">
+		<path refid="test.classpath" />
+		<pathelement location="${unit.test.bin.dir}" />
+	</path>
+
+	<path id="integration.test.classpath">
+		<path refid="test.classpath" />
+		<pathelement location="${integration.test.bin.dir}" />
+	</path>
+
+	<macrodef name="compile-test">
+		<attribute name="src" />
+		<attribute name="bin" />
+		<attribute name="classpath" />
+		<sequential>
+			<mkdir dir="@{bin}" />
+			<copy todir="@{bin}">
+				<fileset dir="@{src}" excludes="**/*.java" />
+			</copy>
+			<javac srcdir="@{src}" destdir="@{bin}" debug="on"
+				includeantruntime="false">
+				<classpath refid="@{classpath}" />
+			</javac>
+		</sequential>
+	</macrodef>
+
+	<target name="compile.unit.test" depends="compile.src">
+		<compile-test src="${test.examples.dir}" bin="${unit.test.bin.dir}"
+			classpath="unit.test.classpath" />
+		<compile-test src="${unit.test.dir}" bin="${unit.test.bin.dir}"
+			classpath="unit.test.classpath" />
 	</target>
 
-	<target name="test" depends="compile.test">
-		<mkdir dir="${reports.dir}"/>
-		<junit printsummary="yes" haltonfailure="yes">
-			<classpath>
-				<path refid="test.classpath"/>
-			</classpath>
-			<formatter type="plain"/>
-			<batchtest fork="no" todir="${reports.dir}">
-				<fileset dir="${test.bin.dir}">
-					<include name="**/*Test.class"/>
-				</fileset>
-			</batchtest>
-		</junit>
+	<target name="compile.integration.test" depends="compile.src">
+		<compile-test src="${test.examples.dir}" bin="${integration.test.bin.dir}"
+			classpath="integration.test.classpath" />
+		<compile-test src="${integration.test.dir}" bin="${integration.test.bin.dir}"
+			classpath="integration.test.classpath" />
 	</target>
+
+	<target name="compile.test" depends="compile.unit.test, compile.integration.test" />
+
+	<macrodef name="run-test">
+		<attribute name="bin" />
+		<attribute name="classpath" />
+		<sequential>
+			<mkdir dir="${reports.dir}" />
+			<junit printsummary="yes" haltonfailure="yes">
+				<classpath>
+					<path refid="@{classpath}" />
+				</classpath>
+				<formatter type="plain" />
+				<batchtest fork="no" todir="${reports.dir}">
+					<fileset dir="@{bin}">
+						<include name="**/*Test.class" />
+					</fileset>
+				</batchtest>
+			</junit>
+		</sequential>
+	</macrodef>
+
+	<target name="test.unit" depends="compile.unit.test">
+		<run-test bin="${unit.test.bin.dir}" classpath="unit.test.classpath" />
+	</target>
+
+	<target name="test.integration" depends="compile.integration.test">
+		<run-test bin="${integration.test.bin.dir}" classpath="integration.test.classpath" />
+	</target>
+
+	<target name="test" depends="test.unit, test.integration" />
 
 	<target name="build.app" depends="test">
-		<antcall target="clean"/>
-		<antcall target="compile.src"/>
-		<delete dir="${dist.dir}"/>
-		<mkdir dir="${dist.dir}"/>
-		<jar destfile="${dist.dir}/${jar.name}.jar" basedir="${src.bin.dir}"/>
+		<antcall target="clean" />
+		<antcall target="compile.src" />
+		<delete dir="${dist.dir}" />
+		<mkdir dir="${dist.dir}" />
+		<jar destfile="${dist.dir}/${jar.name}.jar" basedir="${src.bin.dir}" />
 	</target>
 
 </project>
