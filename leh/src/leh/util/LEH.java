@@ -227,7 +227,7 @@ public class LEH {
 			if(isLEHAware){
 				if(isAlreadyEvaluated(instance1, evaluated)){
 					return instance1 == instance2 || 
-							getHashCode(instance1).hashCode() == getHashCode(instance2).hashCode();
+							getHashCode(instance1, isLEHAware(instance1)) == getHashCode(instance2, isLEHAware(instance2));
 				}
 				evaluated.add(instance1);
 				Class<?> class1 = resolveClass(instance1);
@@ -273,7 +273,8 @@ public class LEH {
 		 * @return
 		 */
 		Class<?> resolveClass(Object instance) {
-			return resolveInstance(instance).getClass();
+			instance = resolveInstance(instance);
+			return instance == null ? void.class : instance.getClass();
 		}
 
 		/**
@@ -740,7 +741,7 @@ public class LEH {
 		
 		/**
 		 * Returns true if instance supplied as argument is of a type that
-		 * implements LEHAware is of the type Wrapper.
+		 * implements LEHAware.
 		 * 
 		 * @see leh.util.LEHAware
 		 * @see leh.util.Wrapper
