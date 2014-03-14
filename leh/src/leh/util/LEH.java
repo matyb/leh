@@ -44,8 +44,8 @@ public class LEH {
 	/**
 	 * Syntactic sugar replacing getInstance().getInstance(Object instance) calls.
 	 * 
-	 * Returns thread confined singleton's evaluation of the supplied instance via
-	 * invocation of its getInstance(instance) method.
+	 * Returns wrapper intercepting equals, hashCode, and toString for evaluation
+	 * reflectively with consideration for identities, and insignificant values.
 	 * 
 	 * @param value
 	 * @return
@@ -135,11 +135,20 @@ public class LEH {
 			};
 		}
 		
+		/**
+		 * Returns wrapper intercepting equals, hashCode, and toString for evaluation
+		 * reflectively with consideration for identities, and insignificant values.
+		 * 
+		 * Retains access to wrapped instance for operations requiring unwrapping.
+		 **/
 		public Wrapper getInstance(final Object value) {
 			return new Wrapper(){
 				
 				private static final long serialVersionUID = 2996123428481468394L;
 				
+				/**
+				 * Return the instance this instance is wrapping.
+				 **/
 				public Object getWrappedInstance() {
 					return value;
 				}
